@@ -1,0 +1,408 @@
+config = '''
+  [[inputs.jolokia2]]
+    default_field_delimiter = "_"
+    fielddrop   = ["*RateUnit", "*EventType"]
+
+    [[inputs.jolokia2.metric]]
+      name         = "kafka_topic"
+      mbean        = "kafka.server:name=*,type=BrokerTopicMetrics"
+      field_prefix = "$1_"
+      taginclude   = ["topic"]
+
+    [[inputs.jolokia2.metric]]
+      name         = "kafka_topic"
+      mbean        = "kafka.server:name=*,topic=*,type=BrokerTopicMetrics"
+      field_prefix = "$1_"
+      taginclude   = ["topic"]
+''' 
+
+response = '''
+  [{
+    "request": {
+      "mbean": "kafka.server:name=*,type=BrokerTopicMetrics",
+      "type": "read"
+    },
+    "value": {
+      "kafka.server:name=TotalProduceRequestsPerSec,type=BrokerTopicMetrics": {
+        "RateUnit": "SECONDS",
+        "OneMinuteRate": 0.0006674316447548538,
+        "EventType": "requests",
+        "Count": 39,
+        "FifteenMinuteRate": 0.025966524551559757,
+        "FiveMinuteRate": 0.030802904798411808,
+        "MeanRate": 0.0033841757148844274
+      },
+      "kafka.server:name=BytesOutPerSec,type=BrokerTopicMetrics": {
+        "RateUnit": "SECONDS",
+        "OneMinuteRate": 0.002706979419277259,
+        "EventType": "bytes",
+        "Count": 403,
+        "FifteenMinuteRate": 0.26108768790093473,
+        "FiveMinuteRate": 0.2695018052860003,
+        "MeanRate": 0.03496981457283606
+      },
+      "kafka.server:name=BytesInPerSec,type=BrokerTopicMetrics": {
+        "RateUnit": "SECONDS",
+        "OneMinuteRate": 0.020690380987400503,
+        "EventType": "bytes",
+        "Count": 1209,
+        "FifteenMinuteRate": 0.8049622610983529,
+        "FiveMinuteRate": 0.9548900487507653,
+        "MeanRate": 0.1049094427700357
+      },
+      "kafka.server:name=BytesRejectedPerSec,type=BrokerTopicMetrics": {
+        "RateUnit": "SECONDS",
+        "OneMinuteRate": 0,
+        "EventType": "bytes",
+        "Count": 0,
+        "FifteenMinuteRate": 0,
+        "FiveMinuteRate": 0,
+        "MeanRate": 0
+      },
+      "kafka.server:name=FailedProduceRequestsPerSec,type=BrokerTopicMetrics": {
+        "RateUnit": "SECONDS",
+        "OneMinuteRate": 0,
+        "EventType": "requests",
+        "Count": 0,
+        "FifteenMinuteRate": 0,
+        "FiveMinuteRate": 0,
+        "MeanRate": 0
+      },
+      "kafka.server:name=MessagesInPerSec,type=BrokerTopicMetrics": {
+        "RateUnit": "SECONDS",
+        "OneMinuteRate": 0.0006674316447548538,
+        "EventType": "messages",
+        "Count": 39,
+        "FifteenMinuteRate": 0.025966524551559757,
+        "FiveMinuteRate": 0.030802904798411808,
+        "MeanRate": 0.0033841755202843205
+      },
+      "kafka.server:name=FailedFetchRequestsPerSec,type=BrokerTopicMetrics": {
+        "RateUnit": "SECONDS",
+        "OneMinuteRate": 0,
+        "EventType": "requests",
+        "Count": 0,
+        "FifteenMinuteRate": 0,
+        "FiveMinuteRate": 0,
+        "MeanRate": 0
+      },
+      "kafka.server:name=TotalFetchRequestsPerSec,type=BrokerTopicMetrics": {
+        "RateUnit": "SECONDS",
+        "OneMinuteRate": 0.007322750245612493,
+        "EventType": "requests",
+        "Count": 1656,
+        "FifteenMinuteRate": 1.054825843846544,
+        "FiveMinuteRate": 1.0437567631823905,
+        "MeanRate": 0.14369730607826303
+      }
+    },
+    "timestamp": 1485055457,
+    "status": 200
+  },
+  {
+    "request": {
+      "mbean": "kafka.server:name=*,topic=*,type=BrokerTopicMetrics",
+      "type": "read"
+    },
+    "value": {
+      "kafka.server:name=FailedProduceRequestsPerSec,topic=bar-logs,type=BrokerTopicMetrics": {
+        "RateUnit": "SECONDS",
+        "OneMinuteRate": 0,
+        "EventType": "requests",
+        "Count": 0,
+        "FifteenMinuteRate": 0,
+        "FiveMinuteRate": 0,
+        "MeanRate": 0
+      },
+      "kafka.server:name=FailedFetchRequestsPerSec,topic=foo-logs,type=BrokerTopicMetrics": {
+        "RateUnit": "SECONDS",
+        "OneMinuteRate": 0,
+        "EventType": "requests",
+        "Count": 0,
+        "FifteenMinuteRate": 0,
+        "FiveMinuteRate": 0,
+        "MeanRate": 0
+      },
+      "kafka.server:name=TotalFetchRequestsPerSec,topic=bar-logs,type=BrokerTopicMetrics": {
+        "RateUnit": "SECONDS",
+        "OneMinuteRate": 0.006300021856177634,
+        "EventType": "requests",
+        "Count": 1508,
+        "FifteenMinuteRate": 0.9590978506704709,
+        "FiveMinuteRate": 0.9450261313740151,
+        "MeanRate": 0.17039943403316887
+      },
+      "kafka.server:name=TotalFetchRequestsPerSec,topic=foo-logs,type=BrokerTopicMetrics": {
+        "RateUnit": "SECONDS",
+        "OneMinuteRate": 0.001079794036185152,
+        "EventType": "requests",
+        "Count": 148,
+        "FifteenMinuteRate": 0.09631145553236763,
+        "FiveMinuteRate": 0.10045679022593561,
+        "MeanRate": 0.07084240116251303
+      },
+      "kafka.server:name=BytesInPerSec,topic=bar-logs,type=BrokerTopicMetrics": {
+        "RateUnit": "SECONDS",
+        "OneMinuteRate": 6.4023295116672e-64,
+        "EventType": "bytes",
+        "Count": 31,
+        "FifteenMinuteRate": 0.00033624418187523094,
+        "FiveMinuteRate": 9.889650777135403e-13,
+        "MeanRate": 0.0035029057204553197
+      },
+      "kafka.server:name=MessagesInPerSec,topic=foo-logs,type=BrokerTopicMetrics": {
+        "RateUnit": "SECONDS",
+        "OneMinuteRate": 0.0006663589527842697,
+        "EventType": "messages",
+        "Count": 38,
+        "FifteenMinuteRate": 0.045682978793683694,
+        "FiveMinuteRate": 0.030981380824981756,
+        "MeanRate": 0.01818924889006622
+      },
+      "kafka.server:name=BytesRejectedPerSec,topic=foo-logs,type=BrokerTopicMetrics": {
+        "RateUnit": "SECONDS",
+        "OneMinuteRate": 0,
+        "EventType": "bytes",
+        "Count": 0,
+        "FifteenMinuteRate": 0,
+        "FiveMinuteRate": 0,
+        "MeanRate": 0
+      },
+      "kafka.server:name=BytesOutPerSec,topic=foo-logs,type=BrokerTopicMetrics": {
+        "RateUnit": "SECONDS",
+        "OneMinuteRate": 0.0026282745558926465,
+        "EventType": "bytes",
+        "Count": 341,
+        "FifteenMinuteRate": 0.22489274005718393,
+        "FiveMinuteRate": 0.2393701084292563,
+        "MeanRate": 0.16322461550553757
+      },
+      "kafka.server:name=MessagesInPerSec,topic=bar-logs,type=BrokerTopicMetrics": {
+        "RateUnit": "SECONDS",
+        "OneMinuteRate": 2.0652675844087803e-65,
+        "EventType": "messages",
+        "Count": 1,
+        "FifteenMinuteRate": 1.0846586512104194e-05,
+        "FiveMinuteRate": 3.1902099281081966e-14,
+        "MeanRate": 0.00011299695422737837
+      },
+      "kafka.server:name=TotalProduceRequestsPerSec,topic=foo-logs,type=BrokerTopicMetrics": {
+        "RateUnit": "SECONDS",
+        "OneMinuteRate": 0.0006663589527842697,
+        "EventType": "requests",
+        "Count": 38,
+        "FifteenMinuteRate": 0.045682978793683694,
+        "FiveMinuteRate": 0.030981380824981756,
+        "MeanRate": 0.01818926201269608
+      },
+      "kafka.server:name=BytesRejectedPerSec,topic=bar-logs,type=BrokerTopicMetrics": {
+        "RateUnit": "SECONDS",
+        "OneMinuteRate": 0,
+        "EventType": "bytes",
+        "Count": 0,
+        "FifteenMinuteRate": 0,
+        "FiveMinuteRate": 0,
+        "MeanRate": 0
+      },
+      "kafka.server:name=FailedFetchRequestsPerSec,topic=bar-logs,type=BrokerTopicMetrics": {
+        "RateUnit": "SECONDS",
+        "OneMinuteRate": 0,
+        "EventType": "requests",
+        "Count": 0,
+        "FifteenMinuteRate": 0,
+        "FiveMinuteRate": 0,
+        "MeanRate": 0
+      },
+      "kafka.server:name=FailedProduceRequestsPerSec,topic=foo-logs,type=BrokerTopicMetrics": {
+        "RateUnit": "SECONDS",
+        "OneMinuteRate": 0,
+        "EventType": "requests",
+        "Count": 0,
+        "FifteenMinuteRate": 0,
+        "FiveMinuteRate": 0,
+        "MeanRate": 0
+      },
+      "kafka.server:name=BytesOutPerSec,topic=bar-logs,type=BrokerTopicMetrics": {
+        "RateUnit": "SECONDS",
+        "OneMinuteRate": 7.870486338461278e-05,
+        "EventType": "bytes",
+        "Count": 62,
+        "FifteenMinuteRate": 0.036194947843750734,
+        "FiveMinuteRate": 0.030131696856743852,
+        "MeanRate": 0.0070058114404174514
+      },
+      "kafka.server:name=BytesInPerSec,topic=foo-logs,type=BrokerTopicMetrics": {
+        "RateUnit": "SECONDS",
+        "OneMinuteRate": 0.020657127536312377,
+        "EventType": "bytes",
+        "Count": 1178,
+        "FifteenMinuteRate": 1.416172342604195,
+        "FiveMinuteRate": 0.9604228055744342,
+        "MeanRate": 0.5638667600464213
+      },
+      "kafka.server:name=TotalProduceRequestsPerSec,topic=bar-logs,type=BrokerTopicMetrics": {
+        "RateUnit": "SECONDS",
+        "OneMinuteRate": 2.0652675844087803e-65,
+        "EventType": "requests",
+        "Count": 1,
+        "FifteenMinuteRate": 1.0846586512104194e-05,
+        "FiveMinuteRate": 3.1902099281081966e-14,
+        "MeanRate": 0.00011299696685545709
+      }
+    },
+    "timestamp": 1485055457,
+    "status": 200
+  }]
+'''
+
+[[expects]]
+  measurement = "kafka_topic"
+
+  [expects.tags]
+    topic = ""
+
+  [expects.fields]
+    TotalProduceRequestsPerSec_OneMinuteRate        = 0.0006674316447548538
+    TotalProduceRequestsPerSec_Count                = 39.0
+    TotalProduceRequestsPerSec_FifteenMinuteRate    = 0.025966524551559757
+    TotalProduceRequestsPerSec_FiveMinuteRate       = 0.030802904798411808
+    TotalProduceRequestsPerSec_MeanRate             = 0.0033841757148844274
+
+    BytesInProduceRequestsPerSec_OneMinuteRate      = 0.002706979419277259
+    BytesInProduceRequestsPerSec_Count              = 403.0
+    BytesInProduceRequestsPerSec_FifteenMinuteRate  = 0.26108768790093473
+    BytesInProduceRequestsPerSec_FiveMinuteRate     = 0.2695018052860003
+    BytesInProduceRequestsPerSec_MeanRate           = 0.03496981457283606
+
+    BytesOutProduceRequestsPerSec_OneMinuteRate     = 0.002706979419277259
+    BytesOutProduceRequestsPerSec_Count             = 403.0
+    BytesOutProduceRequestsPerSec_FifteenMinuteRate = 0.26108768790093473
+    BytesOutProduceRequestsPerSec_FiveMinuteRate    = 0.2695018052860003
+    BytesOutProduceRequestsPerSec_MeanRate          = 0.03496981457283606
+
+    BytesRejectedPerSec_OneMinuteRate               = 0
+    BytesRejectedPerSec_Count                       = 0
+    BytesRejectedPerSec_FifteenMinuteRate           = 0
+    BytesRejectedPerSec_FiveMinuteRate              = 0
+    BytesRejectedPerSec_MeanRate                    = 0
+
+    FailedProduceRequestsPerSec_OneMinuteRate       = 0
+    FailedProduceRequestsPerSec_Count               = 0
+    FailedProduceRequestsPerSec_FifteenMinuteRate   = 0
+    FailedProduceRequestsPerSec_FiveMinuteRate      = 0
+    FailedProduceRequestsPerSec_MeanRate            = 0
+
+    MessagesInPerSec_OneMinuteRate                  = 0.0006674316447548538
+    MessagesInPerSec_Count                          = 39.0
+    MessagesInPerSec_FifteenMinuteRate              = 0.025966524551559757
+    MessagesInPerSec_FiveMinuteRate                 = 0.030802904798411808
+    MessagesInPerSec_MeanRate                       = 0.0033841755202843205
+
+    FailedFetchRequestsPerSec_OneMinuteRate         = 0
+    FailedFetchRequestsPerSec_Count                 = 0
+    FailedFetchRequestsPerSec_FifteenMinuteRate     = 0
+    FailedFetchRequestsPerSec_FiveMinuteRate        = 0
+    FailedFetchRequestsPerSec_MeanRate              = 0
+
+    TotalFetchRequestsPerSec_OneMinuteRate          = 0.007322750245612493
+    TotalFetchRequestsPerSec_Count                  = 1656.0
+    TotalFetchRequestsPerSec_FifteenMinuteRate      = 1.054825843846544
+    TotalFetchRequestsPerSec_FiveMinuteRate         = 1.0437567631823905
+    TotalFetchRequestsPerSec_MeanRate               = 0.14369730607826303
+
+[[expects]]
+  measurement = "kafka_topic"
+
+  [expects.tags]
+    topic = "foo-logs"
+
+  [expects.fields]
+    TotalProduceRequestsPerSec_OneMinuteRate        = 0
+    TotalProduceRequestsPerSec_Count                = 0
+    TotalProduceRequestsPerSec_FifteenMinuteRate    = 0
+    TotalProduceRequestsPerSec_FiveMinuteRate       = 0
+    TotalProduceRequestsPerSec_MeanRate             = 0
+    BytesInProduceRequestsPerSec_OneMinuteRate      = 0
+    BytesInProduceRequestsPerSec_Count              = 0
+    BytesInProduceRequestsPerSec_FifteenMinuteRate  = 0
+    BytesInProduceRequestsPerSec_FiveMinuteRate     = 0
+    BytesInProduceRequestsPerSec_MeanRate           = 0
+    BytesOutProduceRequestsPerSec_OneMinuteRate     = 0
+    BytesOutProduceRequestsPerSec_Count             = 0
+    BytesOutProduceRequestsPerSec_FifteenMinuteRate = 0
+    BytesOutProduceRequestsPerSec_FiveMinuteRate    = 0
+    BytesOutProduceRequestsPerSec_MeanRate          = 0
+    BytesRejectedPerSec_OneMinuteRate               = 0
+    BytesRejectedPerSec_Count                       = 0
+    BytesRejectedPerSec_FifteenMinuteRate           = 0
+    BytesRejectedPerSec_FiveMinuteRate              = 0
+    BytesRejectedPerSec_MeanRate                    = 0
+    FailedProduceRequestsPerSec_OneMinuteRate       = 0
+    FailedProduceRequestsPerSec_Count               = 0
+    FailedProduceRequestsPerSec_FifteenMinuteRate   = 0
+    FailedProduceRequestsPerSec_FiveMinuteRate      = 0
+    FailedProduceRequestsPerSec_MeanRate            = 0
+    MessagesInPerSec_OneMinuteRate                  = 0
+    MessagesInPerSec_Count                          = 0
+    MessagesInPerSec_FifteenMinuteRate              = 0
+    MessagesInPerSec_FiveMinuteRate                 = 0
+    MessagesInPerSec_MeanRate                       = 0
+    FailedFetchRequestsPerSec_OneMinuteRate         = 0
+    FailedFetchRequestsPerSec_Count                 = 0
+    FailedFetchRequestsPerSec_FifteenMinuteRate     = 0
+    FailedFetchRequestsPerSec_FiveMinuteRate        = 0
+    FailedFetchRequestsPerSec_MeanRate              = 0
+    TotalFetchRequestsPerSec_OneMinuteRate          = 0
+    TotalFetchRequestsPerSec_Count                  = 0
+    TotalFetchRequestsPerSec_FifteenMinuteRate      = 0
+    TotalFetchRequestsPerSec_FiveMinuteRate         = 0
+    TotalFetchRequestsPerSec_MeanRate               = 0
+
+[[expects]]
+  measurement = "kafka_topic"
+
+  [expects.tags]
+    topic = "bar-logs"
+
+  [expects.fields]
+    TotalProduceRequestsPerSec_OneMinuteRate        = 0
+    TotalProduceRequestsPerSec_Count                = 0
+    TotalProduceRequestsPerSec_FifteenMinuteRate    = 0
+    TotalProduceRequestsPerSec_FiveMinuteRate       = 0
+    TotalProduceRequestsPerSec_MeanRate             = 0
+    BytesInProduceRequestsPerSec_OneMinuteRate      = 0
+    BytesInProduceRequestsPerSec_Count              = 0
+    BytesInProduceRequestsPerSec_FifteenMinuteRate  = 0
+    BytesInProduceRequestsPerSec_FiveMinuteRate     = 0
+    BytesInProduceRequestsPerSec_MeanRate           = 0
+    BytesOutProduceRequestsPerSec_OneMinuteRate     = 0
+    BytesOutProduceRequestsPerSec_Count             = 0
+    BytesOutProduceRequestsPerSec_FifteenMinuteRate = 0
+    BytesOutProduceRequestsPerSec_FiveMinuteRate    = 0
+    BytesOutProduceRequestsPerSec_MeanRate          = 0
+    BytesRejectedPerSec_OneMinuteRate               = 0
+    BytesRejectedPerSec_Count                       = 0
+    BytesRejectedPerSec_FifteenMinuteRate           = 0
+    BytesRejectedPerSec_FiveMinuteRate              = 0
+    BytesRejectedPerSec_MeanRate                    = 0
+    FailedProduceRequestsPerSec_OneMinuteRate       = 0
+    FailedProduceRequestsPerSec_Count               = 0
+    FailedProduceRequestsPerSec_FifteenMinuteRate   = 0
+    FailedProduceRequestsPerSec_FiveMinuteRate      = 0
+    FailedProduceRequestsPerSec_MeanRate            = 0
+    MessagesInPerSec_OneMinuteRate                  = 0
+    MessagesInPerSec_Count                          = 0
+    MessagesInPerSec_FifteenMinuteRate              = 0
+    MessagesInPerSec_FiveMinuteRate                 = 0
+    MessagesInPerSec_MeanRate                       = 0
+    FailedFetchRequestsPerSec_OneMinuteRate         = 0
+    FailedFetchRequestsPerSec_Count                 = 0
+    FailedFetchRequestsPerSec_FifteenMinuteRate     = 0
+    FailedFetchRequestsPerSec_FiveMinuteRate        = 0
+    FailedFetchRequestsPerSec_MeanRate              = 0
+    TotalFetchRequestsPerSec_OneMinuteRate          = 0
+    TotalFetchRequestsPerSec_Count                  = 0
+    TotalFetchRequestsPerSec_FifteenMinuteRate      = 0
+    TotalFetchRequestsPerSec_FiveMinuteRate         = 0
+    TotalFetchRequestsPerSec_MeanRate               = 0
+

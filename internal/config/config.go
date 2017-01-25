@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -557,124 +558,15 @@ func (c *Config) LoadConfig(path string) error {
 			return err
 		}
 	}
-	tbl, err := parseFile(path)
+	contents, err := loadFile(path)
 	if err != nil {
+		return fmt.Errorf("Error loading %s, %s", path, err)
+	}
+
+	if err = c.ParseConfig(bytes.NewBuffer(contents)); err != nil {
 		return fmt.Errorf("Error parsing %s, %s", path, err)
 	}
 
-	// Parse tags tables first:
-	for _, tableName := range []string{"tags", "global_tags"} {
-		if val, ok := tbl.Fields[tableName]; ok {
-			subTable, ok := val.(*ast.Table)
-			if !ok {
-				return fmt.Errorf("%s: invalid configuration", path)
-			}
-			if err = toml.UnmarshalTable(subTable, c.Tags); err != nil {
-				log.Printf("E! Could not parse [global_tags] config\n")
-				return fmt.Errorf("Error parsing %s, %s", path, err)
-			}
-		}
-	}
-
-	// Parse agent table:
-	if val, ok := tbl.Fields["agent"]; ok {
-		subTable, ok := val.(*ast.Table)
-		if !ok {
-			return fmt.Errorf("%s: invalid configuration", path)
-		}
-		if err = toml.UnmarshalTable(subTable, c.Agent); err != nil {
-			log.Printf("E! Could not parse [agent] config\n")
-			return fmt.Errorf("Error parsing %s, %s", path, err)
-		}
-	}
-
-	// Parse all the rest of the plugins:
-	for name, val := range tbl.Fields {
-		subTable, ok := val.(*ast.Table)
-		if !ok {
-			return fmt.Errorf("%s: invalid configuration", path)
-		}
-
-		switch name {
-		case "agent", "global_tags", "tags":
-		case "outputs":
-			for pluginName, pluginVal := range subTable.Fields {
-				switch pluginSubTable := pluginVal.(type) {
-				// legacy [outputs.influxdb] support
-				case *ast.Table:
-					if err = c.addOutput(pluginName, pluginSubTable); err != nil {
-						return fmt.Errorf("Error parsing %s, %s", path, err)
-					}
-				case []*ast.Table:
-					for _, t := range pluginSubTable {
-						if err = c.addOutput(pluginName, t); err != nil {
-							return fmt.Errorf("Error parsing %s, %s", path, err)
-						}
-					}
-				default:
-					return fmt.Errorf("Unsupported config format: %s, file %s",
-						pluginName, path)
-				}
-			}
-		case "inputs", "plugins":
-			for pluginName, pluginVal := range subTable.Fields {
-				switch pluginSubTable := pluginVal.(type) {
-				// legacy [inputs.cpu] support
-				case *ast.Table:
-					if err = c.addInput(pluginName, pluginSubTable); err != nil {
-						return fmt.Errorf("Error parsing %s, %s", path, err)
-					}
-				case []*ast.Table:
-					for _, t := range pluginSubTable {
-						if err = c.addInput(pluginName, t); err != nil {
-							return fmt.Errorf("Error parsing %s, %s", path, err)
-						}
-					}
-				default:
-					return fmt.Errorf("Unsupported config format: %s, file %s",
-						pluginName, path)
-				}
-			}
-		case "processors":
-			for pluginName, pluginVal := range subTable.Fields {
-				switch pluginSubTable := pluginVal.(type) {
-				case []*ast.Table:
-					for _, t := range pluginSubTable {
-						if err = c.addProcessor(pluginName, t); err != nil {
-							return fmt.Errorf("Error parsing %s, %s", path, err)
-						}
-					}
-				default:
-					return fmt.Errorf("Unsupported config format: %s, file %s",
-						pluginName, path)
-				}
-			}
-		case "aggregators":
-			for pluginName, pluginVal := range subTable.Fields {
-				switch pluginSubTable := pluginVal.(type) {
-				case []*ast.Table:
-					for _, t := range pluginSubTable {
-						if err = c.addAggregator(pluginName, t); err != nil {
-							return fmt.Errorf("Error parsing %s, %s", path, err)
-						}
-					}
-				default:
-					return fmt.Errorf("Unsupported config format: %s, file %s",
-						pluginName, path)
-				}
-			}
-		// Assume it's an input input for legacy config file support if no other
-		// identifiers are present
-		default:
-			if err = c.addInput(name, subTable); err != nil {
-				return fmt.Errorf("Error parsing %s, %s", path, err)
-			}
-		}
-	}
-
-	if len(c.Processors) > 1 {
-		sort.Sort(c.Processors)
-	}
 	return nil
 }
 
@@ -685,10 +577,9 @@ func trimBOM(f []byte) []byte {
 	return bytes.TrimPrefix(f, []byte("\xef\xbb\xbf"))
 }
 
-// parseFile loads a TOML configuration from a provided path and
-// returns the AST produced from the TOML parser. When loading the file, it
+// loadFile loads a TOML configuration. When loading the file, it
 // will find environment variables and replace them.
-func parseFile(fpath string) (*ast.Table, error) {
+func loadFile(fpath string) ([]byte, error) {
 	contents, err := ioutil.ReadFile(fpath)
 	if err != nil {
 		return nil, err
@@ -704,7 +595,131 @@ func parseFile(fpath string) (*ast.Table, error) {
 		}
 	}
 
-	return toml.Parse(contents)
+	return contents, nil
+}
+
+func (c *Config) ParseConfig(reader io.Reader) error {
+	contents, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return err
+	}
+
+	tbl, err := toml.Parse(contents)
+	if err != nil {
+		return err
+	}
+
+	// Parse tags tables first:
+	for _, tableName := range []string{"tags", "global_tags"} {
+		if val, ok := tbl.Fields[tableName]; ok {
+			subTable, ok := val.(*ast.Table)
+			if !ok {
+				return fmt.Errorf("invalid configuration")
+			}
+			if err = toml.UnmarshalTable(subTable, c.Tags); err != nil {
+				log.Printf("E! Could not parse [global_tags] config\n")
+				return err
+			}
+		}
+	}
+
+	// Parse agent table:
+	if val, ok := tbl.Fields["agent"]; ok {
+		subTable, ok := val.(*ast.Table)
+		if !ok {
+			return fmt.Errorf("invalid configuration")
+		}
+		if err = toml.UnmarshalTable(subTable, c.Agent); err != nil {
+			log.Printf("E! Could not parse [agent] config\n")
+			return err
+		}
+	}
+
+	// Parse all the rest of the plugins:
+	for name, val := range tbl.Fields {
+		subTable, ok := val.(*ast.Table)
+		if !ok {
+			return fmt.Errorf("invalid configuration")
+		}
+
+		switch name {
+		case "agent", "global_tags", "tags":
+		case "outputs":
+			for pluginName, pluginVal := range subTable.Fields {
+				switch pluginSubTable := pluginVal.(type) {
+				// legacy [outputs.influxdb] support
+				case *ast.Table:
+					if err = c.addOutput(pluginName, pluginSubTable); err != nil {
+						return err
+					}
+				case []*ast.Table:
+					for _, t := range pluginSubTable {
+						if err = c.addOutput(pluginName, t); err != nil {
+							return err
+						}
+					}
+				default:
+					return fmt.Errorf("Unsupported config format: %s", pluginName)
+				}
+			}
+		case "inputs", "plugins":
+			for pluginName, pluginVal := range subTable.Fields {
+				switch pluginSubTable := pluginVal.(type) {
+				// legacy [inputs.cpu] support
+				case *ast.Table:
+					if err = c.addInput(pluginName, pluginSubTable); err != nil {
+						return err
+					}
+				case []*ast.Table:
+					for _, t := range pluginSubTable {
+						if err = c.addInput(pluginName, t); err != nil {
+							return err
+						}
+					}
+				default:
+					return fmt.Errorf("Unsupported config format: %s", pluginName)
+				}
+			}
+		case "processors":
+			for pluginName, pluginVal := range subTable.Fields {
+				switch pluginSubTable := pluginVal.(type) {
+				case []*ast.Table:
+					for _, t := range pluginSubTable {
+						if err = c.addProcessor(pluginName, t); err != nil {
+							return err
+						}
+					}
+				default:
+					return fmt.Errorf("Unsupported config format: %s", pluginName)
+				}
+			}
+		case "aggregators":
+			for pluginName, pluginVal := range subTable.Fields {
+				switch pluginSubTable := pluginVal.(type) {
+				case []*ast.Table:
+					for _, t := range pluginSubTable {
+						if err = c.addAggregator(pluginName, t); err != nil {
+							return err
+						}
+					}
+				default:
+					return fmt.Errorf("Unsupported config format: %s", pluginName)
+				}
+			}
+		// Assume it's an input input for legacy config file support if no other
+		// identifiers are present
+		default:
+			if err = c.addInput(name, subTable); err != nil {
+				return err
+			}
+		}
+	}
+
+	if len(c.Processors) > 1 {
+		sort.Sort(c.Processors)
+	}
+
+	return nil
 }
 
 func (c *Config) addAggregator(name string, table *ast.Table) error {

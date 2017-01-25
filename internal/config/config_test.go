@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -173,4 +174,21 @@ func TestConfig_LoadDirectory(t *testing.T) {
 		"Merged Testdata did not produce a correct procstat struct.")
 	assert.Equal(t, pConfig, c.Inputs[3].Config,
 		"Merged Testdata did not produce correct procstat metadata.")
+}
+
+func TestConfig_ParseConfig(t *testing.T) {
+	c := NewConfig()
+	r := strings.NewReader(`
+[global_tags]
+  foo = "bar"
+
+[agent]
+  debug = true
+	`)
+
+	err := c.ParseConfig(r)
+	assert.NoError(t, err)
+
+	assert.Equal(t, c.Tags["foo"], "bar")
+	assert.True(t, c.Agent.Debug)
 }

@@ -1,0 +1,122 @@
+config = '''
+  [[inputs.jolokia2]]
+    default_field_delimiter = "_"
+    default_tag_prefix      = ""
+
+    [[inputs.jolokia2.metric]]
+      name  = "object_value_without_attribute"
+      mbean = "object_value_without_attribute:foo=bar"
+
+    [[inputs.jolokia2.metric]]
+      name  = "object_value_with_attribute"
+      mbean = "object_value_with_attribute:foo=bar"
+      paths = ["biz"]
+
+    [[inputs.jolokia2.metric]]
+      name  = "object_value_with_attribute_and_path"
+      mbean = "object_value_with_attribute_and_path:foo=bar"
+      paths = ["biz/baz"]
+
+    [[inputs.jolokia2.metric]]
+      name  = "object_value_with_pattern"
+      mbean = "object_value_with_pattern:test=*"
+'''
+
+response = '''
+  [{
+    "request": {
+      "mbean": "object_value_without_attribute:foo=bar",
+      "type": "read"
+    },
+    "value": {
+      "biz": 123,
+      "baz": 456
+  },
+    "status": 200
+  }, {
+    "request": {
+      "mbean": "object_value_with_attribute:foo=bar",
+      "attribute": "biz",
+      "type": "read"
+    },
+    "value": {
+      "fiz": 123,
+      "faz": 456
+    },
+    "status": 200
+  }, {
+    "request": {
+      "mbean": "object_value_with_attribute_and_path:foo=bar",
+      "attribute": "biz",
+      "path": "baz",
+      "type": "read"
+    },
+    "value": {
+      "bing": 123,
+      "bang": 456
+    },
+    "status": 200
+  }, {
+    "request": {
+      "mbean": "object_value_with_pattern:test=*",
+      "type": "read"
+    },
+    "value": {
+      "object_value_with_pattern:test=foo": {
+        "fiz": 123
+      },
+      "object_value_with_pattern:test=bar": {
+        "biz": 456
+      }
+    },
+    "status": 200
+}]
+'''
+
+[[expects]]
+  measurement = "object_value_without_attribute"
+
+  [expects.tags]
+    foo = "bar"
+
+  [expects.fields]
+    biz = 123.0
+    baz = 456.0
+
+[[expects]]
+  measurement = "object_value_with_attribute"
+
+  [expects.tags]
+   foo = "bar"
+
+  [expects.fields]
+    biz_fiz = 123.0
+    biz_faz = 456.0
+
+[[expects]]
+  measurement = "object_value_with_attribute_and_path"
+
+  [expects.tags]
+    foo = "bar"
+
+  [expects.fields]
+    biz_baz_bing = 123.0
+    biz_baz_bang = 456.0
+
+[[expects]]
+  measurement = "object_value_with_pattern"
+
+  [expects.tags]
+    test = "foo"
+
+  [expects.fields]
+    fiz = 123.0
+
+[[expects]]
+  measurement = "object_value_with_pattern"
+
+  [expects.tags]
+    test = "bar"
+
+  [expects.fields]
+    biz = 456.0

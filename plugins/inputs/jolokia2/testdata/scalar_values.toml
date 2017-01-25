@@ -1,0 +1,106 @@
+config = '''
+  [[inputs.jolokia2]]
+    default_field_delimiter = "_"
+    default_tag_prefix      = ""
+
+    [[inputs.jolokia2.metric]]
+      name  = "scalar_value_without_attribute"
+      mbean = "scalar_value_without_attribute:foo=bar"
+
+    [[inputs.jolokia2.metric]]
+      name  = "scalar_value_with_attribute"
+      mbean = "scalar_value_with_attribute:foo=bar"
+      paths = ["biz"]
+
+    [[inputs.jolokia2.metric]]
+      name  = "scalar_value_with_attribute_and_path"
+      mbean = "scalar_value_with_attribute_and_path:foo=bar"
+      paths = ["biz/baz"]
+
+    [[inputs.jolokia2.metric]]
+      name  = "scalar_value_with_pattern"
+      mbean = "scalar_value_with_pattern:test=*"
+'''
+
+response = '''
+  [{
+    "request": {
+      "mbean": "scalar_value_without_attribute:foo=bar",
+      "type": "read"
+    },
+    "value": 123,
+    "status": 200
+  }, {
+    "request": {
+      "mbean": "scalar_value_with_attribute:foo=bar",
+      "attribute": "biz",
+      "type": "read"
+    },
+    "value": 456,
+    "status": 200
+  }, {
+    "request": {
+      "mbean": "scalar_value_with_attribute_and_path:foo=bar",
+      "attribute": "biz",
+      "path": "baz",
+      "type": "read"
+    },
+    "value": 789,
+    "status": 200
+  }, {
+    "request": {
+      "mbean": "scalar_value_with_pattern:test=*",
+      "type": "read"
+    },
+    "value": {
+      "scalar_value_with_pattern:test=foo": 123,
+      "scalar_value_with_pattern:test=bar": 456
+    },
+    "status": 200
+  }]
+'''
+
+[[expects]]
+  measurement = "scalar_value_without_attribute"
+
+  [expects.tags]
+    foo = "bar"
+
+  [expects.fields]
+    value = 123.0
+
+[[expects]]
+  measurement = "scalar_value_with_attribute"
+
+  [expects.tags]
+    foo = "bar"
+
+  [expects.fields]
+    biz = 456.0
+
+[[expects]]
+  measurement = "scalar_value_with_attribute_and_path"
+
+  [expects.tags]
+    foo = "bar"
+
+  [expects.fields]
+    biz_baz = 789.0
+
+[[expects]]
+  measurement = "scalar_value_with_pattern"
+
+  [expects.tags]
+    test = "foo"
+
+  [expects.fields]
+    value = 123.0
+
+[[expects]]
+  measurement = "scalar_value_with_pattern"
+
+  [expects.tags]
+    test = "bar"
+
+  [expects.fields]
+    value = 456.0

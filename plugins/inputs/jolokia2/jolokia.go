@@ -94,39 +94,7 @@ func (jc *Jolokia) Gather(acc telegraf.Accumulator) error {
 	var metrics []Metric
 
 	for _, config := range jc.Metrics {
-		metric := Metric{
-			Name:      config.Name,
-			Mbean:     config.Mbean,
-			Paths:     config.Paths,
-			AllowTags: config.TagInclude,
-			DenyTags:  config.TagExclude,
-		}
-
-		if config.FieldPrefix == nil {
-			metric.FieldPrefix = jc.DefaultFieldPrefix
-		} else {
-			metric.FieldPrefix = *config.FieldPrefix
-		}
-
-		if config.FieldDelimiter == nil {
-			metric.FieldDelimiter = jc.DefaultFieldDelimiter
-		} else {
-			metric.FieldDelimiter = *config.FieldDelimiter
-		}
-
-		if config.TagPrefix == nil {
-			metric.TagPrefix = jc.DefaultTagPrefix
-		} else {
-			metric.TagPrefix = *config.TagPrefix
-		}
-
-		if config.TagDelimiter == nil {
-			metric.TagDelimiter = jc.DefaultTagDelimiter
-		} else {
-			metric.TagDelimiter = *config.TagDelimiter
-		}
-
-		metrics = append(metrics, metric)
+		metrics = append(metrics, jc.newMetric(config))
 	}
 
 	gatherer := NewGatherer(metrics, acc)
@@ -146,6 +114,42 @@ func (jc *Jolokia) Gather(acc telegraf.Accumulator) error {
 	}
 
 	return nil
+}
+
+func (jc *Jolokia) newMetric(config metricConfig) Metric {
+	metric := Metric{
+		Name:      config.Name,
+		Mbean:     config.Mbean,
+		Paths:     config.Paths,
+		AllowTags: config.TagInclude,
+		DenyTags:  config.TagExclude,
+	}
+
+	if config.FieldPrefix == nil {
+		metric.FieldPrefix = jc.DefaultFieldPrefix
+	} else {
+		metric.FieldPrefix = *config.FieldPrefix
+	}
+
+	if config.FieldDelimiter == nil {
+		metric.FieldDelimiter = jc.DefaultFieldDelimiter
+	} else {
+		metric.FieldDelimiter = *config.FieldDelimiter
+	}
+
+	if config.TagPrefix == nil {
+		metric.TagPrefix = jc.DefaultTagPrefix
+	} else {
+		metric.TagPrefix = *config.TagPrefix
+	}
+
+	if config.TagDelimiter == nil {
+		metric.TagDelimiter = jc.DefaultTagDelimiter
+	} else {
+		metric.TagDelimiter = *config.TagDelimiter
+	}
+
+	return metric
 }
 
 func init() {

@@ -198,7 +198,8 @@ func (a *Accumulator) AssertContainsTaggedFields(
 		}
 
 		if p.Measurement == measurement {
-			assert.Equal(t, fields, p.Fields)
+			msg := fmt.Sprintf("failed assertion on measurement %s with tags %v", measurement, tags)
+			assert.Equal(t, fields, p.Fields, msg)
 			return
 		}
 	}
@@ -215,7 +216,8 @@ func (a *Accumulator) AssertContainsFields(
 	defer a.Unlock()
 	for _, p := range a.Metrics {
 		if p.Measurement == measurement {
-			assert.Equal(t, fields, p.Fields)
+			msg := fmt.Sprintf("failed assertion on measurement %s", measurement)
+			assert.Equal(t, fields, p.Fields, msg)
 			return
 		}
 	}

@@ -10,9 +10,9 @@ through the Jolokia REST endpoint and its [JSON-over-HTTP protocol](https://jolo
 # Read JMX metrics through Jolokia
 
 [[inputs.jolokia2]]
-  #default_field_delimiter = "."
+  #default_field_separator = "."
   #default_field_prefix    = ""
-  #default_tag_delimiter   = "_"
+  #default_tag_separator   = "_"
   #default_tag_prefix      = "mbean"
 
   # Add agents to query
@@ -40,26 +40,26 @@ through the Jolokia REST endpoint and its [JSON-over-HTTP protocol](https://jolo
       "LastGcInfo/duration",
       "LastGcInfo/GcThreadCount",
     ]
-    taginclude = ["name"]
+    tag_keys = ["name"]
 
   # Use 'tagexclude' to specify just the tags to remove.
   [[inputs.jolokia2.metric]]
     name       = "jvm_memory_pool"
     mbean      = "java.lang:name=*,type=MemoryPool"
     paths      = ["Usage", "PeakUsage, "CollectionUsage"]
-    tagexclude = ["type"]
+    untag_keys = ["type"]
 
   [[inputs.jolokia2.metric]]
     name         = "kafka_topic"
     mbean        = "kafka.server:name=*,topic=*,type=BrokerTopicMetrics"
     field_prefix = "$1"
-    taginclude   = ["topic"]
+    tag_keys   = ["topic"]
 
   [[inputs.jolokia2.metric]]
     name       = "kafka_log"
     mbean      = "kafka.log:name=*,partition=*,topic=*,type=Log"
     field_name = "$1"
-    taginclude = ["topic", "partition"]
+    untag_keys = ["topic", "partition"]
 ```
 
 To specify timeouts for slower/over-loaded clients:

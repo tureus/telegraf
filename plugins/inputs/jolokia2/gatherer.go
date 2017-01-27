@@ -11,12 +11,12 @@ type Metric struct {
 	Name           string
 	Mbean          string
 	Paths          []string
-	AllowTags      []string
-	DenyTags       []string
+	TagKeys        []string
+	UntagKeys      []string
 	FieldPrefix    string
-	FieldDelimiter string
+	FieldSeparator string
 	TagPrefix      string
-	TagDelimiter   string
+	TagSeparator   string
 }
 
 type Gatherer struct {

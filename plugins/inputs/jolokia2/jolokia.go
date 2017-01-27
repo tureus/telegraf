@@ -13,9 +13,9 @@ type Jolokia struct {
 	Proxy                 proxyConfig
 	Metrics               []metricConfig `toml:"metric"`
 	DefaultFieldPrefix    string         `toml:"default_field_prefix"`
-	DefaultFieldDelimiter string         `toml:"default_field_delimiter"`
+	DefaultFieldSeparator string         `toml:"default_field_separator"`
 	DefaultTagPrefix      string         `toml:"default_tag_prefix"`
-	DefaultTagDelimiter   string         `toml:"default_tag_delimiter"`
+	DefaultTagSeparator   string         `toml:"default_tag_separator"`
 }
 
 type remoteConfig struct {
@@ -54,11 +54,11 @@ type metricConfig struct {
 	Paths          []string
 	FieldName      string   `toml:"field_name"`
 	FieldPrefix    *string  `toml:"field_prefix"`
-	FieldDelimiter *string  `toml:"field_delimiter"`
+	FieldSeparator *string  `toml:"field_separator"`
 	TagPrefix      *string  `toml:"tag_prefix"`
-	TagDelimiter   *string  `toml:"tag_delimiter"`
-	TagInclude     []string `toml:"taginclude"`
-	TagExclude     []string `toml:"tagexclude"`
+	TagSeparator   *string  `toml:"tag_separator"`
+	TagKeys        []string `toml:"tag_keys"`
+	UntagKeys      []string `toml:"untag_keys"`
 }
 
 func (jc *Jolokia) SampleConfig() string {
@@ -121,8 +121,8 @@ func (jc *Jolokia) newMetric(config metricConfig) Metric {
 		Name:      config.Name,
 		Mbean:     config.Mbean,
 		Paths:     config.Paths,
-		AllowTags: config.TagInclude,
-		DenyTags:  config.TagExclude,
+		TagKeys:   config.TagKeys,
+		UntagKeys: config.UntagKeys,
 	}
 
 	if config.FieldPrefix == nil {
@@ -131,10 +131,10 @@ func (jc *Jolokia) newMetric(config metricConfig) Metric {
 		metric.FieldPrefix = *config.FieldPrefix
 	}
 
-	if config.FieldDelimiter == nil {
-		metric.FieldDelimiter = jc.DefaultFieldDelimiter
+	if config.FieldSeparator == nil {
+		metric.FieldSeparator = jc.DefaultFieldSeparator
 	} else {
-		metric.FieldDelimiter = *config.FieldDelimiter
+		metric.FieldSeparator = *config.FieldSeparator
 	}
 
 	if config.TagPrefix == nil {
@@ -143,10 +143,10 @@ func (jc *Jolokia) newMetric(config metricConfig) Metric {
 		metric.TagPrefix = *config.TagPrefix
 	}
 
-	if config.TagDelimiter == nil {
-		metric.TagDelimiter = jc.DefaultTagDelimiter
+	if config.TagSeparator == nil {
+		metric.TagSeparator = jc.DefaultTagSeparator
 	} else {
-		metric.TagDelimiter = *config.TagDelimiter
+		metric.TagSeparator = *config.TagSeparator
 	}
 
 	return metric
@@ -157,9 +157,9 @@ func init() {
 		return &Jolokia{
 			Metrics:               []metricConfig{},
 			DefaultFieldPrefix:    "",
-			DefaultFieldDelimiter: ".",
+			DefaultFieldSeparator: ".",
 			DefaultTagPrefix:      "mbean",
-			DefaultTagDelimiter:   "_",
+			DefaultTagSeparator:   "_",
 		}
 	})
 }

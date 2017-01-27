@@ -56,19 +56,19 @@ func (pb *pointBuilder) extractTags(mbean string) map[string]string {
 }
 
 func (pb *pointBuilder) includeTag(tagName string) bool {
-	for _, t := range pb.metric.AllowTags {
+	for _, t := range pb.metric.TagKeys {
 		if tagName == t {
 			return true
 		}
 	}
 
-	for _, t := range pb.metric.DenyTags {
+	for _, t := range pb.metric.UntagKeys {
 		if tagName == t {
 			return false
 		}
 	}
 
-	if len(pb.metric.AllowTags) == 0 {
+	if len(pb.metric.TagKeys) == 0 {
 		// Implicitly expose all mbean properties as tags.
 		return true
 	}
@@ -82,7 +82,7 @@ func (pb *pointBuilder) formatTagName(tagName string) string {
 	}
 
 	if tagPrefix := pb.metric.TagPrefix; tagPrefix != "" {
-		return tagPrefix + pb.metric.TagDelimiter + tagName
+		return tagPrefix + pb.metric.TagSeparator + tagName
 	}
 
 	return tagName
@@ -135,14 +135,14 @@ func (pb *pointBuilder) extractFields(value interface{}) map[string]interface{} 
 func (pb *pointBuilder) formatFieldName(attribute, path string) string {
 	fieldName := attribute
 	fieldPrefix := pb.metric.FieldPrefix
-	fieldDelimiter := pb.metric.FieldDelimiter
+	fieldSeparator := pb.metric.FieldSeparator
 
 	if fieldPrefix != "" {
-		fieldName = fieldPrefix + fieldDelimiter + fieldName
+		fieldName = fieldPrefix + fieldSeparator + fieldName
 	}
 
 	if path != "" {
-		fieldName = fieldName + fieldDelimiter + strings.Replace(path, "/", fieldDelimiter, -1)
+		fieldName = fieldName + fieldSeparator + strings.Replace(path, "/", fieldSeparator, -1)
 	}
 
 	return fieldName
@@ -150,7 +150,7 @@ func (pb *pointBuilder) formatFieldName(attribute, path string) string {
 
 func (pb *pointBuilder) fillFields(name string, value interface{}, fieldMap map[string]interface{}) {
 	if valueMap, ok := value.(map[string]interface{}); ok {
-		delimiter := pb.metric.FieldDelimiter
+		separator := pb.metric.FieldSeparator
 
 		// keep going until we get to something that is not a map
 		for key, innerValue := range valueMap {
@@ -159,7 +159,7 @@ func (pb *pointBuilder) fillFields(name string, value interface{}, fieldMap map[
 			if name == "" {
 				innerName = key
 			} else {
-				innerName = name + delimiter + key
+				innerName = name + separator + key
 			}
 
 			pb.fillFields(innerName, innerValue, fieldMap)

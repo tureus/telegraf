@@ -1,10 +1,10 @@
 config = '''
   [[inputs.jolokia2]]
     default_field_prefix    = "foo"
-    default_field_delimiter = "xxx"
+    default_field_separator = "xxx"
 
     default_tag_prefix      = "bar"
-    default_tag_delimiter   = "yyy"
+    default_tag_separator   = "yyy"
 
     [[inputs.jolokia2.metric]]
       name  = "tag_and_field_defaults1"
@@ -19,10 +19,10 @@ config = '''
       name  = "tag_and_field_customizations1"
       mbean = "tag_and_field_customizations1:biz=baz,fiz=faz"
 
-      tag_delimiter = "YYY"
+      tag_separator = "YYY"
       tag_prefix    = "BAR"
 
-      field_delimiter = "XXX"
+      field_separator = "XXX"
       field_prefix    = "FOO"
 
     [[inputs.jolokia2.metric]]
@@ -30,10 +30,10 @@ config = '''
       mbean = "tag_and_field_customizations2:biz=baz,fiz=faz"
       paths = ["test"]
 
-      tag_delimiter = "YYY"
+      tag_separator = "YYY"
       tag_prefix    = "BAR"
 
-      field_delimiter = "XXX"
+      field_separator = "XXX"
       field_prefix    = "FOO"
 
 	[[inputs.jolokia2.metric]]

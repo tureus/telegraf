@@ -1,19 +1,19 @@
 config = '''
   [[inputs.jolokia2]]
-    default_field_delimiter = "_"
+    default_field_separator = "_"
     fielddrop   = ["*RateUnit", "*EventType"]
 
     [[inputs.jolokia2.metric]]
       name         = "kafka_topic"
       mbean        = "kafka.server:name=*,type=BrokerTopicMetrics"
       field_prefix = "$1_"
-      taginclude   = ["topic"]
+      tag_keys     = ["topic"]
 
     [[inputs.jolokia2.metric]]
       name         = "kafka_topic"
       mbean        = "kafka.server:name=*,topic=*,type=BrokerTopicMetrics"
       field_prefix = "$1_"
-      taginclude   = ["topic"]
+      tag_keys     = ["topic"]
 ''' 
 
 response = '''

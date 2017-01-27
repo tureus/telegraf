@@ -1,6 +1,6 @@
 config = '''
   [[inputs.jolokia2]]
-    default_field_delimiter = "_"
+    default_field_separator = "_"
     default_tag_prefix      = ""
 
     [[inputs.jolokia2.metric]]
@@ -10,7 +10,7 @@ config = '''
         "CollectionTime",
         "CollectionCount"
       ]
-      taginclude = ["name"]
+      tag_keys = ["name"]
 
     [[inputs.jolokia2.metric]]
       name  = "jvm_memory"
@@ -20,7 +20,7 @@ config = '''
         "NonHeapMemoryUsage",
         "ObjectPendingFinalizationCount",
       ]
-      tagexclude = ["type"]
+      untag_keys = ["type"]
 ''' 
 
 response = '''

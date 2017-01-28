@@ -89,11 +89,11 @@ func (pb *pointBuilder) formatTagName(tagName string) string {
 }
 
 func (pb *pointBuilder) extractFields(value interface{}) map[string]interface{} {
-	fieldMap := make(map[string]interface{})
-	valueMap, ok := value.(map[string]interface{})
-
 	attributes := pb.request.Attributes
 	path := pb.request.Path
+
+	fieldMap := make(map[string]interface{})
+	valueMap, ok := value.(map[string]interface{})
 
 	if ok {
 		// complex value

@@ -30,7 +30,7 @@ through the Jolokia REST endpoint and its [JSON-over-HTTP protocol](https://jolo
     paths = ["HeapMemoryUsage", "NonHeapMemoryUsage", "ObjectPendingFinalizationCount"]
 
   # By default, all mbean keys are added as tags
-  # Use 'taginclude' to specify the exact tags to add.
+  # Use 'tag_keys' to specify the exact tags to add.
   [[inputs.jolokia2.metric]]
     name  = "jvm_g1_garbage_collector"
     mbean = "java.lang:name=G1*,type=GarbageCollector"
@@ -42,7 +42,7 @@ through the Jolokia REST endpoint and its [JSON-over-HTTP protocol](https://jolo
     ]
     tag_keys = ["name"]
 
-  # Use 'tagexclude' to specify just the tags to remove.
+  # Use 'untag_keys' to specify just the tags to remove.
   [[inputs.jolokia2.metric]]
     name       = "jvm_memory_pool"
     mbean      = "java.lang:name=*,type=MemoryPool"

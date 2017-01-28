@@ -4,28 +4,48 @@ config = '''
     default_tag_prefix      = ""
 
     [[inputs.jolokia2.metric]]
-      name  = "object_value_without_attribute"
-      mbean = "object_value_without_attribute:foo=bar"
+      name  = "object_without_attribute"
+      mbean = "object_without_attribute:foo=bar"
 
     [[inputs.jolokia2.metric]]
-      name  = "object_value_with_attribute"
-      mbean = "object_value_with_attribute:foo=bar"
+      name  = "object_with_attribute"
+      mbean = "object_with_attribute:foo=bar"
       paths = ["biz"]
 
     [[inputs.jolokia2.metric]]
-      name  = "object_value_with_attribute_and_path"
-      mbean = "object_value_with_attribute_and_path:foo=bar"
+      name  = "object_with_attribute_and_path"
+      mbean = "object_with_attribute_and_path:foo=bar"
       paths = ["biz/baz"]
 
     [[inputs.jolokia2.metric]]
-      name  = "object_value_with_pattern"
-      mbean = "object_value_with_pattern:test=*"
+      name  = "object_with_pattern"
+      mbean = "object_with_pattern:test=*"
+
+    [[inputs.jolokia2.metric]]
+      name  = "object_with_attribute_sharing_an_mbean_name1"
+      mbean = "object_with_attribute_sharing_an_mbean_name"
+      paths = ["foo"]
+
+    [[inputs.jolokia2.metric]]
+      name  = "object_with_attribute_sharing_an_mbean_name2"
+      mbean = "object_with_attribute_sharing_an_mbean_name"
+      paths = ["bar"]
+
+    [[inputs.jolokia2.metric]]
+      name  = "object_with_attribute_and_path_sharing_an_mbean_name1"
+      mbean = "object_with_attribute_and_path_sharing_an_mbean_name"
+      paths = ["foo/fiz"]
+
+    [[inputs.jolokia2.metric]]
+      name  = "object_with_attribute_and_path_sharing_an_mbean_name2"
+      mbean = "object_with_attribute_and_path_sharing_an_mbean_name"
+      paths = ["bar/biz"]
 '''
 
 response = '''
   [{
     "request": {
-      "mbean": "object_value_without_attribute:foo=bar",
+      "mbean": "object_without_attribute:foo=bar",
       "type": "read"
     },
     "value": {
@@ -35,7 +55,7 @@ response = '''
     "status": 200
   }, {
     "request": {
-      "mbean": "object_value_with_attribute:foo=bar",
+      "mbean": "object_with_attribute:foo=bar",
       "attribute": "biz",
       "type": "read"
     },
@@ -46,7 +66,7 @@ response = '''
     "status": 200
   }, {
     "request": {
-      "mbean": "object_value_with_attribute_and_path:foo=bar",
+      "mbean": "object_with_attribute_and_path:foo=bar",
       "attribute": "biz",
       "path": "baz",
       "type": "read"
@@ -58,23 +78,65 @@ response = '''
     "status": 200
   }, {
     "request": {
-      "mbean": "object_value_with_pattern:test=*",
+      "mbean": "object_with_pattern:test=*",
       "type": "read"
     },
     "value": {
-      "object_value_with_pattern:test=foo": {
+      "object_with_pattern:test=foo": {
         "fiz": 123
       },
-      "object_value_with_pattern:test=bar": {
+      "object_with_pattern:test=bar": {
         "biz": 456
       }
     },
     "status": 200
-}]
+  }, {
+    "request": {
+      "mbean": "object_with_attribute_sharing_an_mbean_name",
+      "attribute": "foo",
+      "type": "read"
+    },
+    "value": {
+      "bing": 123
+  },
+    "status": 200
+  }, {
+    "request": {
+      "mbean": "object_with_attribute_sharing_an_mbean_name",
+      "attribute": "bar",
+      "type": "read"
+    },
+    "value": {
+      "fang": 456
+    },
+    "status": 200
+  }, {
+    "request": {
+      "mbean": "object_with_attribute_and_path_sharing_an_mbean_name",
+      "attribute": "foo",
+      "path": "fiz",
+      "type": "read"
+    },
+    "value": {
+      "bing": 123
+    },
+    "status": 200
+  }, {
+    "request": {
+      "mbean": "object_with_attribute_and_path_sharing_an_mbean_name",
+      "attribute": "bar",
+      "path": "biz",
+      "type": "read"
+    },
+    "value": {
+      "fang": 456
+    },
+    "status": 200
+  }]
 '''
 
 [[expects]]
-  measurement = "object_value_without_attribute"
+  measurement = "object_without_attribute"
 
   [expects.tags]
     foo = "bar"
@@ -84,7 +146,7 @@ response = '''
     baz = 456.0
 
 [[expects]]
-  measurement = "object_value_with_attribute"
+  measurement = "object_with_attribute"
 
   [expects.tags]
    foo = "bar"
@@ -94,7 +156,7 @@ response = '''
     biz_faz = 456.0
 
 [[expects]]
-  measurement = "object_value_with_attribute_and_path"
+  measurement = "object_with_attribute_and_path"
 
   [expects.tags]
     foo = "bar"
@@ -104,7 +166,7 @@ response = '''
     biz_baz_bang = 456.0
 
 [[expects]]
-  measurement = "object_value_with_pattern"
+  measurement = "object_with_pattern"
 
   [expects.tags]
     test = "foo"
@@ -113,10 +175,42 @@ response = '''
     fiz = 123.0
 
 [[expects]]
-  measurement = "object_value_with_pattern"
+  measurement = "object_with_pattern"
 
   [expects.tags]
     test = "bar"
 
   [expects.fields]
     biz = 456.0
+
+[[expects]]
+  measurement = "object_with_attribute_sharing_an_mbean_name1"
+
+  [expects.tags]
+
+  [expects.fields]
+    foo_bing = 123.0
+
+[[expects]]
+  measurement = "object_with_attribute_sharing_an_mbean_name2"
+
+  [expects.tags]
+
+  [expects.fields]
+    bar_fang = 456.0
+
+[[expects]]
+  measurement = "object_with_attribute_and_path_sharing_an_mbean_name1"
+
+  [expects.tags]
+
+  [expects.fields]
+    foo_fiz_bing = 123.0
+
+[[expects]]
+  measurement = "object_with_attribute_and_path_sharing_an_mbean_name2"
+
+  [expects.tags]
+
+  [expects.fields]
+    bar_biz_fang = 456.0

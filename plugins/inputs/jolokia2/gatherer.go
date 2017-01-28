@@ -43,9 +43,7 @@ func (g *Gatherer) gatherMetric(metric Metric, responses []ReadResponse, tags ma
 	for _, response := range responses {
 		request := response.Request
 
-		// FIXME: it takes more to correlate metrics and
-		// responses than an object name/pattern.
-		if metric.Mbean != request.Mbean {
+		if !metricMatchesRequest(metric, request) {
 			continue
 		}
 
@@ -84,4 +82,32 @@ func gatherTags(metricTags, outerTags map[string]string) map[string]string {
 	}
 
 	return tags
+}
+
+func metricMatchesRequest(metric Metric, request ReadRequest) bool {
+	if metric.Mbean != request.Mbean {
+		return false
+	}
+
+	if len(metric.Paths) == 0 {
+		return len(request.Attributes) == 0
+	}
+
+	for _, fullPath := range metric.Paths {
+		segments := strings.SplitN(fullPath, "/", 2)
+		attribute := segments[0]
+
+		var path string
+		if len(segments) == 2 {
+			path = segments[1]
+		}
+
+		for _, rattr := range request.Attributes {
+			if attribute == rattr {
+				return path == request.Path
+			}
+		}
+	}
+
+	return false
 }

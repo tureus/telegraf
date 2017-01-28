@@ -25,7 +25,7 @@ func TestJolokia2_ObjectValuesFixture(t *testing.T) {
 }
 
 func TestJolokia2_TagAndFieldCustomizations(t *testing.T) {
-	runFixture(t, "./testdata/tag_and_field_customizations.toml")
+	runFixture(t, "./testdata/tags_and_fields.toml")
 }
 
 func TestJolokia2_JvmFixture(t *testing.T) {

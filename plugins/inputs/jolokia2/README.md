@@ -10,56 +10,58 @@ through the Jolokia REST endpoint and its [JSON-over-HTTP protocol](https://jolo
 # Read JMX metrics through Jolokia
 
 [[inputs.jolokia2]]
-  #default_field_separator = "."
-  #default_field_prefix    = ""
-  #default_tag_separator   = "_"
-  #default_tag_prefix      = "mbean"
+  # default_field_separator = "."
+  # default_field_prefix    = ""
+  # default_tag_separator   = "_"
+  # default_tag_prefix      = "mbean"
 
   # Add agents to query
   [inputs.jolokia2.agents]
     urls = ["http://kafka:8080/jolokia"]
 
+  # Supply a 'path' to collect a simple scalar value called 'Uptime'.
   [[inputs.jolokia2.metric]]
     name  = "jvm_runtime"
     mbean = "java.lang:type=Runtime"
     paths = ["Uptime"]
 
+  # More complex values may be collected as well.
   [[inputs.jolokia2.metric]]
     name  = "jvm_memory"
     mbean = "java.lang:type=Memory"
     paths = ["HeapMemoryUsage", "NonHeapMemoryUsage", "ObjectPendingFinalizationCount"]
 
+  # Use mbean object patterns to create distinct series.
+  # TODO: needs simple example
+
   # By default, all mbean keys are added as tags
-  # Use 'tag_keys' to specify the exact tags to add.
+  # Use 'tag_keys' to specify exactly the keys to add as tags.
   [[inputs.jolokia2.metric]]
-    name  = "jvm_g1_garbage_collector"
-    mbean = "java.lang:name=G1*,type=GarbageCollector"
-    paths = [
-      "CollectionTime",
-      "CollectionCount",
-      "LastGcInfo/duration",
-      "LastGcInfo/GcThreadCount",
-    ]
+    name     = "jvm_garbage_collector"
+    mbean    = "java.lang:name=*,type=GarbageCollector"
+    paths    = ["CollectionTime", "CollectionCount"]
     tag_keys = ["name"]
 
   # Use 'untag_keys' to specify just the tags to remove.
   [[inputs.jolokia2.metric]]
     name       = "jvm_memory_pool"
     mbean      = "java.lang:name=*,type=MemoryPool"
-    paths      = ["Usage", "PeakUsage, "CollectionUsage"]
+    paths      = ["Usage", "PeakUsage", "CollectionUsage"]
     untag_keys = ["type"]
 
+  # Use simple substitutions to alter field prefixes with mbean properties.
   [[inputs.jolokia2.metric]]
     name         = "kafka_topic"
     mbean        = "kafka.server:name=*,topic=*,type=BrokerTopicMetrics"
     field_prefix = "$1"
     tag_keys   = ["topic"]
 
+  # In some cases, it makes sense to substitute field names for mbean properties.
   [[inputs.jolokia2.metric]]
     name       = "kafka_log"
     mbean      = "kafka.log:name=*,partition=*,topic=*,type=Log"
     field_name = "$1"
-    untag_keys = ["topic", "partition"]
+    tag_keys = ["topic", "partition"]
 ```
 
 To specify timeouts for slower/over-loaded clients:

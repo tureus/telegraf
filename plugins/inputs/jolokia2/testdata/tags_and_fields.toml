@@ -36,12 +36,25 @@ config = '''
       field_separator = "XXX"
       field_prefix    = "FOO"
 
-	[[inputs.jolokia2.metric]]
-	  name  = "clear_prefixes"
-	  mbean = "clear_prefixes:biz=baz,fiz=faz"
+    [[inputs.jolokia2.metric]]
+      name  = "clear_prefixes"
+      mbean = "clear_prefixes:biz=baz,fiz=faz"
 
-	  tag_prefix   = ""
-	  field_prefix = ""
+      tag_prefix   = ""
+      field_prefix = ""
+
+    [[inputs.jolokia2.metric]]
+      name         = "fixed_field_name"
+      mbean        = "fixed_field_name"
+      field_name   = "fixed"
+      field_prefix = ""
+
+    [[inputs.jolokia2.metric]]
+      name            = "fixed_field_name_and_prefix"
+      mbean           = "fixed_field_name_and_prefix"
+      field_separator = "_"
+      field_name      = "fixed"
+      field_prefix    = "fixed"
 '''
 
 response = '''
@@ -95,6 +108,24 @@ response = '''
     "value": {
       "hello": 123,
       "world": 456
+    },
+    "status": 200
+  }, {
+    "request": {
+      "mbean": "fixed_field_name",
+      "type": "read"
+    },
+    "value": {
+      "test": 123
+    },
+    "status": 200
+  }, {
+    "request": {
+      "mbean": "fixed_field_name_and_prefix",
+      "type": "read"
+    },
+    "value": {
+      "test": 123
     },
     "status": 200
   }]
@@ -154,3 +185,19 @@ response = '''
   [expects.fields]
     hello = 123.0
     world = 456.0
+
+[[expects]]
+  measurement = "fixed_field_name"
+
+  [expects.tags]
+
+  [expects.fields]
+    fixed = 123.0
+
+[[expects]]
+  measurement = "fixed_field_name_and_prefix"
+
+  [expects.tags]
+
+  [expects.fields]
+    fixed_fixed = 123.0

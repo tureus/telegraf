@@ -1,6 +1,6 @@
 config = '''
   [[inputs.jolokia2]]
-	default_tag_prefix = ""
+    default_tag_prefix = ""
 
     [[inputs.jolokia2.metric]]
       name       = "kafka_log"
@@ -35,7 +35,7 @@ response = '''
         "Value": 1
       },
       "kafka.log:name=Size,partition=0,topic=bar-logs,type=Log": {
-        "Value": 123
+        "Value": 456
       },
       "kafka.log:name=LogStartOffset,partition=0,topic=bar-logs,type=Log": {
         "Value": 0
@@ -50,25 +50,25 @@ response = '''
   measurement = "kafka_log"
 
   [expects.tags]
-    topic     = "foo"
+    topic     = "foo-logs"
     partition = "0"
 
   [expects.fields]
-    LogStartOffset = 0
-    LogEndOffset   = 1
-    NumLogSegments = 1
-    Size           = 123
+    LogStartOffset = 0.0
+    LogEndOffset   = 1.0
+    NumLogSegments = 1.0
+    Size           = 123.0
 
 [[expects]]
   measurement = "kafka_log"
 
   [expects.tags]
-    topic     = "bar"
+    topic     = "bar-logs"
     partition = "0"
 
   [expects.fields]
-    LogStartOffset = 0
-    LogEndOffset   = 1
-    NumLogSegments = 1
-    Size           = 456
+    LogStartOffset = 0.0
+    LogEndOffset   = 1.0
+    NumLogSegments = 1.0
+    Size           = 456.0
 

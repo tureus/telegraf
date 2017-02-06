@@ -108,6 +108,7 @@ func makeReadUrl(configUrl, username, password string) (string, error) {
 	}
 
 	readUrl.Path = path.Join(parsedUrl.Path, "read")
+	readUrl.Query().Add("ignoreErrors", "true")
 	return readUrl.String(), nil
 }
 

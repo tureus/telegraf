@@ -52,7 +52,7 @@ type metricConfig struct {
 	Name           string
 	Mbean          string
 	Paths          []string
-	FieldName      string   `toml:"field_name"`
+	FieldName      *string  `toml:"field_name"`
 	FieldPrefix    *string  `toml:"field_prefix"`
 	FieldSeparator *string  `toml:"field_separator"`
 	TagPrefix      *string  `toml:"tag_prefix"`
@@ -123,6 +123,10 @@ func (jc *Jolokia) newMetric(config metricConfig) Metric {
 		Paths:     config.Paths,
 		TagKeys:   config.TagKeys,
 		UntagKeys: config.UntagKeys,
+	}
+
+	if config.FieldName != nil {
+		metric.FieldName = *config.FieldName
 	}
 
 	if config.FieldPrefix == nil {

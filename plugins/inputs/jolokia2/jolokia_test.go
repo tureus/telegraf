@@ -24,21 +24,29 @@ func TestJolokia2_ObjectValuesFixture(t *testing.T) {
 	runFixture(t, "./testdata/object_values.toml")
 }
 
-func TestJolokia2_TagAndFieldCustomizations(t *testing.T) {
+func TestJolokia2_TagsAndFieldsFixture(t *testing.T) {
 	runFixture(t, "./testdata/tags_and_fields.toml")
+}
+
+func TestJolokia2_SubstitutionFixture(t *testing.T) {
+	runFixture(t, "./testdata/substitution.toml")
+}
+
+func TestJolokia2_CompactionFixture(t *testing.T) {
+	runFixture(t, "./testdata/compaction.toml")
 }
 
 func TestJolokia2_JvmFixture(t *testing.T) {
 	runFixture(t, "./testdata/jvm.toml")
 }
 
-//func TestJolokia2_KafkaLogFixture(t *testing.T) {
-//	runFixture(t, "./testdata/kafka_log.toml")
-//}
+func TestJolokia2_KafkaLogFixture(t *testing.T) {
+	runFixture(t, "./testdata/kafka_log.toml")
+}
 
-//func TestJolokia2_KafkaTopicFixture(t *testing.T) {
-//	runFixture(t, "./testdata/kafka_topic.toml")
-//}
+func TestJolokia2_KafkaTopicFixture(t *testing.T) {
+	runFixture(t, "./testdata/kafka_topic.toml")
+}
 
 func runFixture(t *testing.T, path string) {
 	fixture := setupFixture(t, path)

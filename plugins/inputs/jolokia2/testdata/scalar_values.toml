@@ -1,25 +1,28 @@
 config = '''
   [[inputs.jolokia2]]
     default_field_separator = "_"
-    default_tag_prefix      = ""
 
     [[inputs.jolokia2.metric]]
-      name  = "scalar_value_without_attribute"
-      mbean = "scalar_value_without_attribute:foo=bar"
+      name     = "scalar_value_without_attribute"
+      mbean    = "scalar_value_without_attribute:foo=bar"
+      tag_keys = ["foo"]
 
     [[inputs.jolokia2.metric]]
-      name  = "scalar_value_with_attribute"
-      mbean = "scalar_value_with_attribute:foo=bar"
-      paths = ["biz"]
+      name     = "scalar_value_with_attribute"
+      mbean    = "scalar_value_with_attribute:foo=bar"
+      paths    = ["biz"]
+      tag_keys = ["foo"]
 
     [[inputs.jolokia2.metric]]
-      name  = "scalar_value_with_attribute_and_path"
-      mbean = "scalar_value_with_attribute_and_path:foo=bar"
-      paths = ["biz/baz"]
+      name     = "scalar_value_with_attribute_and_path"
+      mbean    = "scalar_value_with_attribute_and_path:foo=bar"
+      paths    = ["biz/baz"]
+      tag_keys = ["foo"]
 
     [[inputs.jolokia2.metric]]
-      name  = "scalar_value_with_pattern"
-      mbean = "scalar_value_with_pattern:test=*"
+      name     = "scalar_value_with_pattern"
+      mbean    = "scalar_value_with_pattern:test=*"
+      tag_keys = ["test"]
 '''
 
 response = '''

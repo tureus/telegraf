@@ -1,22 +1,24 @@
 config = '''
   [[inputs.jolokia2]]
-    default_tag_prefix = ""
-
     [[inputs.jolokia2.metric]]
-      name  = "compact_metric"
-      mbean = "scalar_value:flavor=chocolate"
+      name     = "compact_metric"
+      mbean    = "scalar_value:flavor=chocolate"
+      tag_keys = ["flavor"]
 
     [[inputs.jolokia2.metric]]
       name  = "compact_metric"
       mbean = "scalar_value:flavor=vanilla"
+      tag_keys = ["flavor"]
 
     [[inputs.jolokia2.metric]]
       name  = "compact_metric"
       mbean = "object_value1:flavor=chocolate"
+      tag_keys = ["flavor"]
 
     [[inputs.jolokia2.metric]]
       name  = "compact_metric"
       mbean = "object_value2:flavor=chocolate"
+      tag_keys = ["flavor"]
 '''
 
 response = '''

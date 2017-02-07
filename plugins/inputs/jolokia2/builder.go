@@ -66,17 +66,6 @@ func (pb *pointBuilder) includeTag(tagName string) bool {
 		}
 	}
 
-	for _, t := range pb.metric.UntagKeys {
-		if tagName == t {
-			return false
-		}
-	}
-
-	if len(pb.metric.TagKeys) == 0 {
-		// Implicitly expose all mbean properties as tags.
-		return true
-	}
-
 	return false
 }
 

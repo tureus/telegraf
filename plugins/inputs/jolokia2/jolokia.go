@@ -1,7 +1,6 @@
 package jolokia2
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/influxdata/telegraf"
@@ -58,32 +57,28 @@ type metricConfig struct {
 	TagPrefix      *string  `toml:"tag_prefix"`
 	TagSeparator   *string  `toml:"tag_separator"`
 	TagKeys        []string `toml:"tag_keys"`
-	UntagKeys      []string `toml:"untag_keys"`
 }
 
 func (jc *Jolokia) SampleConfig() string {
-	return fmt.Sprintf(`
-# %s
-
-[[inputs.jolokia2]]
-  # Add a metric name prefix
-  #name_prefix = "example_"
+	return `
+  # default_tag_prefix      = ""
+  # default_tag_separator   = "_"
+  # default_field_separator = "."
 
   # Add agents to query
   [inputs.jolokia2.agents]
-    urls     = ["http://kafka:8080/jolokia"]
+    urls     = ["http://127.0.0.1:8080/jolokia"]
     #username = ""
     #password = ""
     #ssl_ca   = "/var/private/ca.pem"
     #ssl_cert = "/var/private/client.pem"
     #ssl_key  = "/var/private/client-key.pem"
-    #insecure_skip_verify = false
 
   [[inputs.jolokia2.metric]]
     name  = "jvm_runtime"
     mbean = "java.lang:type=Runtime"
     paths = ["Uptime"]
-`, jc.Description())
+`
 }
 
 func (jc *Jolokia) Description() string {
@@ -118,11 +113,10 @@ func (jc *Jolokia) Gather(acc telegraf.Accumulator) error {
 
 func (jc *Jolokia) newMetric(config metricConfig) Metric {
 	metric := Metric{
-		Name:      config.Name,
-		Mbean:     config.Mbean,
-		Paths:     config.Paths,
-		TagKeys:   config.TagKeys,
-		UntagKeys: config.UntagKeys,
+		Name:    config.Name,
+		Mbean:   config.Mbean,
+		Paths:   config.Paths,
+		TagKeys: config.TagKeys,
 	}
 
 	if config.FieldName != nil {
@@ -162,7 +156,7 @@ func init() {
 			Metrics:               []metricConfig{},
 			DefaultFieldPrefix:    "",
 			DefaultFieldSeparator: ".",
-			DefaultTagPrefix:      "mbean",
+			DefaultTagPrefix:      "",
 			DefaultTagSeparator:   "_",
 		}
 	})

@@ -1,7 +1,5 @@
 config = '''
   [[inputs.jolokia2]]
-    default_tag_prefix = ""
-
     [[inputs.jolokia2.metric]]
       name       = "kafka_log"
       mbean      = "kafka.log:name=*,partition=*,topic=*,type=Log"

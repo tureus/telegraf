@@ -1,13 +1,11 @@
 config = '''
   [[inputs.jolokia2]]
     default_field_separator = "_"
-    default_tag_prefix      = ""
 
     [[inputs.jolokia2.metric]]
       name         = "kafka_topic_summary"
       mbean        = "kafka.server:name=*,type=BrokerTopicMetrics"
       field_prefix = "$1"
-      untag_keys   = ["name", "type"]
 
     [[inputs.jolokia2.metric]]
       name         = "kafka_topic"

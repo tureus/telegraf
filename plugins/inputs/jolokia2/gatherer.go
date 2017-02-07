@@ -11,7 +11,6 @@ type Metric struct {
 	Mbean          string
 	Paths          []string
 	TagKeys        []string
-	UntagKeys      []string
 	FieldName      string
 	FieldPrefix    string
 	FieldSeparator string

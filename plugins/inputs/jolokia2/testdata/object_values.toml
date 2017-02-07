@@ -1,25 +1,28 @@
 config = '''
   [[inputs.jolokia2]]
     default_field_separator = "_"
-    default_tag_prefix      = ""
 
     [[inputs.jolokia2.metric]]
-      name  = "object_without_attribute"
-      mbean = "object_without_attribute:foo=bar"
+      name     = "object_without_attribute"
+      mbean    = "object_without_attribute:foo=bar"
+      tag_keys = ["foo"]
 
     [[inputs.jolokia2.metric]]
-      name  = "object_with_attribute"
-      mbean = "object_with_attribute:foo=bar"
-      paths = ["biz"]
+      name     = "object_with_attribute"
+      mbean    = "object_with_attribute:foo=bar"
+      paths    = ["biz"]
+      tag_keys = ["foo"]
 
     [[inputs.jolokia2.metric]]
-      name  = "object_with_attribute_and_path"
-      mbean = "object_with_attribute_and_path:foo=bar"
-      paths = ["biz/baz"]
+      name     = "object_with_attribute_and_path"
+      mbean    = "object_with_attribute_and_path:foo=bar"
+      paths    = ["biz/baz"]
+      tag_keys = ["foo"]
 
     [[inputs.jolokia2.metric]]
-      name  = "object_with_pattern"
-      mbean = "object_with_pattern:test=*"
+      name     = "object_with_pattern"
+      mbean    = "object_with_pattern:test=*"
+      tag_keys = ["test"]
 
     [[inputs.jolokia2.metric]]
       name  = "object_with_attribute_sharing_an_mbean_name1"

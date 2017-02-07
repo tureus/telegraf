@@ -7,17 +7,20 @@ config = '''
     default_tag_separator   = "yyy"
 
     [[inputs.jolokia2.metric]]
-      name  = "tag_and_field_defaults1"
-      mbean = "tag_and_field_defaults1:biz=baz,fiz=faz"
+      name     = "tag_and_field_defaults1"
+      mbean    = "tag_and_field_defaults1:biz=baz,fiz=faz"
+      tag_keys = ["biz", "fiz"]
 
     [[inputs.jolokia2.metric]]
-      name  = "tag_and_field_defaults2"
-      mbean = "tag_and_field_defaults2:biz=baz,fiz=faz"
-      paths = ["test"]
+      name     = "tag_and_field_defaults2"
+      mbean    = "tag_and_field_defaults2:biz=baz,fiz=faz"
+      paths    = ["test"]
+      tag_keys = ["biz", "fiz"]
 
     [[inputs.jolokia2.metric]]
-      name  = "tag_and_field_customizations1"
-      mbean = "tag_and_field_customizations1:biz=baz,fiz=faz"
+      name     = "tag_and_field_customizations1"
+      mbean    = "tag_and_field_customizations1:biz=baz,fiz=faz"
+      tag_keys = ["biz", "fiz"]
 
       tag_separator = "YYY"
       tag_prefix    = "BAR"
@@ -26,9 +29,10 @@ config = '''
       field_prefix    = "FOO"
 
     [[inputs.jolokia2.metric]]
-      name  = "tag_and_field_customizations2"
-      mbean = "tag_and_field_customizations2:biz=baz,fiz=faz"
-      paths = ["test"]
+      name     = "tag_and_field_customizations2"
+      mbean    = "tag_and_field_customizations2:biz=baz,fiz=faz"
+      paths    = ["test"]
+      tag_keys = ["biz", "fiz"]
 
       tag_separator = "YYY"
       tag_prefix    = "BAR"
@@ -37,8 +41,9 @@ config = '''
       field_prefix    = "FOO"
 
     [[inputs.jolokia2.metric]]
-      name  = "clear_prefixes"
-      mbean = "clear_prefixes:biz=baz,fiz=faz"
+      name     = "clear_prefixes"
+      mbean    = "clear_prefixes:biz=baz,fiz=faz"
+      tag_keys = ["biz", "fiz"]
 
       tag_prefix   = ""
       field_prefix = ""

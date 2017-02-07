@@ -1,10 +1,9 @@
 config = '''
   [[inputs.jolokia2]]
     default_field_separator = "_"
-    default_tag_prefix      = ""
 
     [[inputs.jolokia2.metric]]
-      name  = "jvm_gc"
+      name  = "jvm_garbage_collector"
       mbean = "java.lang:name=G1*,type=GarbageCollector"
       paths = [
         "CollectionTime",
@@ -20,7 +19,6 @@ config = '''
         "NonHeapMemoryUsage",
         "ObjectPendingFinalizationCount",
       ]
-      untag_keys = ["type"]
 ''' 
 
 response = '''
@@ -76,7 +74,7 @@ response = '''
 '''
 
 [[expects]]
-  measurement = "jvm_gc"
+  measurement = "jvm_garbage_collector"
 
   [expects.tags]
     name = "G1 Young Generation"
@@ -86,7 +84,7 @@ response = '''
     CollectionCount = 456.0
 
 [[expects]]
-  measurement = "jvm_gc"
+  measurement = "jvm_garbage_collector"
 
   [expects.tags]
     name = "G1 Old Generation"

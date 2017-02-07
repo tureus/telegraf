@@ -6,18 +6,20 @@ through the Jolokia REST endpoint and its [JSON-over-HTTP protocol](https://jolo
 ### Configuration:
 
 ```toml
-
-# Read JMX metrics through Jolokia
+# Read JMX metrics from a Jolokia REST endpoint
 
 [[inputs.jolokia2]]
   # default_field_separator = "."
   # default_field_prefix    = ""
   # default_tag_separator   = "_"
-  # default_tag_prefix      = "mbean"
+  # default_tag_prefix      = ""
 
   # Add agents to query
   [inputs.jolokia2.agents]
     urls = ["http://kafka:8080/jolokia"]
+    # tag_url  = true
+    # tag_host = false
+    # tag_addr = false
 
   # Supply a 'path' to collect a simple scalar value called 'Uptime'.
   [[inputs.jolokia2.metric]]
@@ -31,32 +33,31 @@ through the Jolokia REST endpoint and its [JSON-over-HTTP protocol](https://jolo
     mbean = "java.lang:type=Memory"
     paths = ["HeapMemoryUsage", "NonHeapMemoryUsage", "ObjectPendingFinalizationCount"]
 
-  # Use mbean object patterns to create distinct series.
-  # TODO: needs simple example
-
-  # By default, all mbean keys are added as tags
-  # Use 'tag_keys' to specify exactly the keys to add as tags.
+  # Use 'mbean' object patterns to create distinct series, and
+  # use 'tag_keys' to specify exactly the keys to add as tags.
   [[inputs.jolokia2.metric]]
     name     = "jvm_garbage_collector"
     mbean    = "java.lang:name=*,type=GarbageCollector"
     paths    = ["CollectionTime", "CollectionCount"]
     tag_keys = ["name"]
 
-  # Use 'untag_keys' to specify just the tags to remove.
+  # Use 'tag_prefix' to add detail to tag names.
   [[inputs.jolokia2.metric]]
     name       = "jvm_memory_pool"
     mbean      = "java.lang:name=*,type=MemoryPool"
     paths      = ["Usage", "PeakUsage", "CollectionUsage"]
-    untag_keys = ["type"]
+    tag_keys   = ["name"]
+    tag_prefix = "pool"
 
   # Use simple substitutions to alter field prefixes with mbean properties.
   [[inputs.jolokia2.metric]]
     name         = "kafka_topic"
     mbean        = "kafka.server:name=*,topic=*,type=BrokerTopicMetrics"
     field_prefix = "$1"
-    tag_keys   = ["topic"]
+    tag_keys     = ["topic"]
 
-  # In some cases, it makes sense to substitute field names for mbean properties.
+  # In some cases, it makes sense to substitute entire field names for
+  # mbean property keys.
   [[inputs.jolokia2.metric]]
     name       = "kafka_log"
     mbean      = "kafka.log:name=*,partition=*,topic=*,type=Log"

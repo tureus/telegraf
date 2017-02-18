@@ -20,6 +20,11 @@ config = '''
       tag_keys = ["foo"]
 
     [[inputs.jolokia2.metric]]
+      name     = "object_with_branching_paths"
+      mbean    = "object_with_branching_paths"
+      paths    = ["foo/fiz", "foo/faz"]
+
+    [[inputs.jolokia2.metric]]
       name     = "object_with_pattern"
       mbean    = "object_with_pattern:test=*"
       tag_keys = ["test"]
@@ -65,6 +70,28 @@ response = '''
     "value": {
       "fiz": 123,
       "faz": 456
+    },
+    "status": 200
+  }, {
+    "request": {
+      "mbean": "object_with_branching_paths",
+      "attribute": "foo",
+      "path": "fiz",
+      "type": "read"
+    },
+    "value": {
+      "bing": 123
+    },
+    "status": 200
+  }, {
+    "request": {
+      "mbean": "object_with_branching_paths",
+      "attribute": "foo",
+      "path": "faz",
+      "type": "read"
+    },
+    "value": {
+      "bang": 456
     },
     "status": 200
   }, {
@@ -167,6 +194,15 @@ response = '''
   [expects.fields]
     biz_baz_bing = 123.0
     biz_baz_bang = 456.0
+
+[[expects]]
+  measurement = "object_with_branching_paths"
+
+  [expects.tags]
+
+  [expects.fields]
+    foo_fiz_bing = 123.0
+    foo_faz_bang = 456.0
 
 [[expects]]
   measurement = "object_with_pattern"

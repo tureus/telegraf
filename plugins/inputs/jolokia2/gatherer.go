@@ -123,8 +123,8 @@ func metricMatchesRequest(metric Metric, request ReadRequest) bool {
 		}
 
 		for _, rattr := range request.Attributes {
-			if attribute == rattr {
-				return path == request.Path
+			if attribute == rattr && path == request.Path {
+				return true
 			}
 		}
 	}

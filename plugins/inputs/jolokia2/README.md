@@ -11,7 +11,6 @@ through the Jolokia REST endpoint and its [JSON-over-HTTP protocol](https://jolo
 [[inputs.jolokia2]]
   # default_field_separator = "."
   # default_field_prefix    = ""
-  # default_tag_separator   = "_"
   # default_tag_prefix      = ""
 
   # Add agents to query
@@ -100,6 +99,8 @@ To interact with agents via a Jolokia proxy, use a `proxy` configuration instead
 [[inputs.jolokia2]]
   [inputs.jolokia2.proxy]
     url = "https://proxy:8080/jolokia"
+    #username = ""
+    #password = ""
     response_timeout = "10s"
     #default_target_username = ""
     #default_target_password = ""

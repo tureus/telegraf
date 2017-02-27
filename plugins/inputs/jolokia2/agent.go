@@ -8,12 +8,33 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"time"
 )
 
-type ReadResponse struct {
-	Status  int
-	Request ReadRequest
-	Value   interface{}
+type Agent struct {
+	URL    string
+	client *http.Client
+	config *AgentConfig
+}
+
+type AgentConfig struct {
+	ResponseTimeout time.Duration
+	Username        string
+	Password        string
+
+	ProxyConfig *ProxyConfig
+}
+
+type ProxyConfig struct {
+	DefaultTargetUsername string
+	DefaultTargetPassword string
+	Targets               []ProxyTargetConfig
+}
+
+type ProxyTargetConfig struct {
+	Username string
+	Password string
+	URL      string
 }
 
 type ReadRequest struct {
@@ -22,45 +43,76 @@ type ReadRequest struct {
 	Path       string
 }
 
-type Agent struct {
-	url      string
-	client   *http.Client
-	username string
-	password string
+type ReadResponse struct {
+	Status            int
+	Value             interface{}
+	RequestMbean      string
+	RequestAttributes []string
+	RequestPath       string
+	RequestTarget     string
 }
 
-type agentResponse struct {
-	Status  int          `json:"status"`
-	Request agentRequest `json:"request"`
-	Value   interface{}  `json:"value"`
+// Jolokia JSON request object. Example: {
+//   "type": "read",
+//   "mbean: "java.lang:type="Runtime",
+//   "attribute": "Uptime",
+//   "target": {
+//     "url: "service:jmx:rmi:///jndi/rmi://target:9010/jmxrmi"
+//   }
+// }
+type jolokiaRequest struct {
+	Type      string         `json:"type"`
+	Mbean     string         `json:"mbean"`
+	Attribute interface{}    `json:"attribute,omitempty"`
+	Path      string         `json:"path,omitempty"`
+	Target    *jolokiaTarget `json:"target,omitempty"`
 }
 
-type agentRequest struct {
-	Type      string      `json:"type"`
-	Mbean     string      `json:"mbean"`
-	Attribute interface{} `json:"attribute,omitempty"`
-	Path      string      `json:"path,omitempty"`
+type jolokiaTarget struct {
+	URL      string `json:"url"`
+	User     string `json:"user,omitempty"`
+	Password string `json:"password,omitempty"`
 }
 
-func NewAgent(url string, config *remoteConfig) *Agent {
+// Jolokia JSON response object. Example: {
+//   "request": {
+//     "type": "read"
+//     "mbean": "java.lang:type=Runtime",
+//     "attribute": "Uptime",
+//     "target": {
+//       "url": "service:jmx:rmi:///jndi/rmi://target:9010/jmxrmi"
+//     }
+//   },
+//   "value": 1214083,
+//   "timestamp": 1488059309,
+//   "status": 200
+// }
+type jolokiaResponse struct {
+	Request jolokiaRequest `json:"request"`
+	Value   interface{}    `json:"value"`
+	Status  int            `json:"status"`
+}
+
+func NewAgent(url string, config *AgentConfig) *Agent {
 	client := &http.Client{
 		Timeout: config.ResponseTimeout,
 	}
 
 	return &Agent{
-		url:    url,
+		URL:    url,
+		config: config,
 		client: client,
 	}
 }
 
 func (a *Agent) Read(requests []ReadRequest) ([]ReadResponse, error) {
-	requestObjects := makeRequests(requests)
-	requestBody, err := json.Marshal(requestObjects)
+	jrequests := makeJolokiaRequests(requests, a.config.ProxyConfig)
+	requestBody, err := json.Marshal(jrequests)
 	if err != nil {
 		return nil, err
 	}
 
-	requestUrl, err := makeReadUrl(a.url, a.username, a.password)
+	requestUrl, err := formatReadUrl(a.URL, a.config.Username, a.config.Password)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +128,7 @@ func (a *Agent) Read(requests []ReadRequest) ([]ReadResponse, error) {
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("Response from url \"%s\" has status code %d (%s), expected %d (%s)",
-			a.url, resp.StatusCode, http.StatusText(resp.StatusCode), http.StatusOK, http.StatusText(http.StatusOK))
+			a.URL, resp.StatusCode, http.StatusText(resp.StatusCode), http.StatusOK, http.StatusText(http.StatusOK))
 	}
 
 	responseBody, err := ioutil.ReadAll(resp.Body)
@@ -84,15 +136,103 @@ func (a *Agent) Read(requests []ReadRequest) ([]ReadResponse, error) {
 		return nil, err
 	}
 
-	var responses []agentResponse
-	if err = json.Unmarshal([]byte(responseBody), &responses); err != nil {
+	var jresponses []jolokiaResponse
+	if err = json.Unmarshal([]byte(responseBody), &jresponses); err != nil {
 		return nil, fmt.Errorf("Error decoding JSON response: %s: %s", err, responseBody)
 	}
 
-	return makeResponses(responses), nil
+	return makeReadResponses(jresponses), nil
 }
 
-func makeReadUrl(configUrl, username, password string) (string, error) {
+func makeJolokiaRequests(rrequests []ReadRequest, proxyConfig *ProxyConfig) []jolokiaRequest {
+	jrequests := make([]jolokiaRequest, 0)
+	if proxyConfig == nil {
+		for _, rr := range rrequests {
+			jrequests = append(jrequests, makeJolokiaRequest(rr, nil))
+		}
+	} else {
+		for _, t := range proxyConfig.Targets {
+			if t.Username == "" {
+				t.Username = proxyConfig.DefaultTargetUsername
+			}
+			if t.Password == "" {
+				t.Password = proxyConfig.DefaultTargetPassword
+			}
+
+			for _, rr := range rrequests {
+				jtarget := &jolokiaTarget{
+					URL:      t.URL,
+					User:     t.Username,
+					Password: t.Password,
+				}
+
+				jrequests = append(jrequests, makeJolokiaRequest(rr, jtarget))
+			}
+		}
+	}
+
+	return jrequests
+}
+
+func makeJolokiaRequest(rrequest ReadRequest, jtarget *jolokiaTarget) jolokiaRequest {
+	jrequest := jolokiaRequest{
+		Type:   "read",
+		Mbean:  rrequest.Mbean,
+		Path:   rrequest.Path,
+		Target: jtarget,
+	}
+
+	if len(rrequest.Attributes) == 1 {
+		jrequest.Attribute = rrequest.Attributes[0]
+	}
+	if len(rrequest.Attributes) > 1 {
+		jrequest.Attribute = rrequest.Attributes
+	}
+
+	return jrequest
+}
+
+func makeReadResponses(jresponses []jolokiaResponse) []ReadResponse {
+	rresponses := make([]ReadResponse, 0)
+
+	for _, jr := range jresponses {
+		rrequest := ReadRequest{
+			Mbean:      jr.Request.Mbean,
+			Path:       jr.Request.Path,
+			Attributes: []string{},
+		}
+
+		attrValue := jr.Request.Attribute
+		if attrValue != nil {
+			attribute, ok := attrValue.(string)
+			if ok {
+				rrequest.Attributes = []string{attribute}
+			} else {
+				attributes, _ := attrValue.([]interface{})
+				rrequest.Attributes = make([]string, len(attributes))
+				for i, attr := range attributes {
+					rrequest.Attributes[i] = attr.(string)
+				}
+			}
+		}
+		rresponse := ReadResponse{
+			Value:             jr.Value,
+			Status:            jr.Status,
+			RequestMbean:      rrequest.Mbean,
+			RequestAttributes: rrequest.Attributes,
+			RequestPath:       rrequest.Path,
+		}
+		if jtarget := jr.Request.Target; jtarget != nil {
+			rresponse.RequestTarget = jtarget.URL
+		}
+
+		rresponses = append(rresponses, rresponse)
+	}
+
+	return rresponses
+}
+
+func formatReadUrl(configUrl, username, password string) (string, error) {
 	parsedUrl, err := url.Parse(configUrl)
 	if err != nil {
 		return "", err
@@ -110,57 +250,4 @@ func makeReadUrl(configUrl, username, password string) (string, error) {
 	readUrl.Path = path.Join(parsedUrl.Path, "read")
 	readUrl.Query().Add("ignoreErrors", "true")
 	return readUrl.String(), nil
-}
-
-func makeRequests(requests []ReadRequest) []agentRequest {
-	requestObjects := make([]agentRequest, len(requests))
-	for i, request := range requests {
-		requestObjects[i] = agentRequest{
-			Type:  "read",
-			Mbean: request.Mbean,
-			Path:  request.Path,
-		}
-		if len(request.Attributes) == 1 {
-			requestObjects[i].Attribute = request.Attributes[0]
-		}
-		if len(request.Attributes) > 1 {
-			requestObjects[i].Attribute = request.Attributes
-		}
-	}
-
-	return requestObjects
-}
-
-func makeResponses(responseObjects []agentResponse) []ReadResponse {
-	responses := make([]ReadResponse, len(responseObjects))
-
-	for i, object := range responseObjects {
-		request := ReadRequest{
-			Mbean:      object.Request.Mbean,
-			Path:       object.Request.Path,
-			Attributes: []string{},
-		}
-
-		attrValue := object.Request.Attribute
-		if attrValue != nil {
-			attribute, ok := attrValue.(string)
-			if ok {
-				request.Attributes = []string{attribute}
-			} else {
-				attributes, _ := attrValue.([]interface{})
-				request.Attributes = make([]string, len(attributes))
-				for i, attr := range attributes {
-					request.Attributes[i] = attr.(string)
-				}
-			}
-		}
-
-		responses[i] = ReadResponse{
-			Request: request,
-			Value:   object.Value,
-			Status:  object.Status,
-		}
-	}
-
-	return responses
 }

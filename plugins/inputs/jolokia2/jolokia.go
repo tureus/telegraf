@@ -14,7 +14,6 @@ type Jolokia struct {
 	DefaultFieldPrefix    string         `toml:"default_field_prefix"`
 	DefaultFieldSeparator string         `toml:"default_field_separator"`
 	DefaultTagPrefix      string         `toml:"default_tag_prefix"`
-	DefaultTagSeparator   string         `toml:"default_tag_separator"`
 }
 
 type remoteConfig struct {
@@ -29,20 +28,20 @@ type remoteConfig struct {
 
 type agentsConfig struct {
 	remoteConfig
-	Urls []string
+	URLs []string `toml:"urls"`
 }
 
 type proxyConfig struct {
 	remoteConfig
-	Url                   string
+	URL                   string `toml:"url"`
 	DefaultTargetPassword string `toml:"default_target_username"`
 	DefaultTargetUsername string `toml:"default_target_password"`
 
-	Targets []proxyTargetConfig
+	Targets []proxyTargetConfig `toml:"target"`
 }
 
 type proxyTargetConfig struct {
-	Url      string
+	URL      string `toml:"url"`
 	Username string
 	Password string
 }
@@ -55,7 +54,6 @@ type metricConfig struct {
 	FieldPrefix    *string  `toml:"field_prefix"`
 	FieldSeparator *string  `toml:"field_separator"`
 	TagPrefix      *string  `toml:"tag_prefix"`
-	TagSeparator   *string  `toml:"tag_separator"`
 	TagKeys        []string `toml:"tag_keys"`
 }
 
@@ -95,16 +93,49 @@ func (jc *Jolokia) Gather(acc telegraf.Accumulator) error {
 	gatherer := NewGatherer(metrics, acc)
 	requests := RequestPayload(metrics)
 
-	// for each remote config...
-	for _, url := range jc.Agents.Urls {
-		agent := NewAgent(url, &jc.Agents.remoteConfig)
-		tags := map[string]string{"jolokia_agent_url": agent.url}
+	for _, url := range jc.Agents.URLs {
+		agent := NewAgent(url, &AgentConfig{
+			Username:        jc.Agents.Username,
+			Password:        jc.Agents.Password,
+			ResponseTimeout: jc.Agents.ResponseTimeout,
+		})
 
 		responses, err := agent.Read(requests)
 		if err != nil {
 			return err
 		}
 
+		tags := map[string]string{"jolokia_agent_url": url}
+		gatherer.Gather(responses, tags)
+	}
+
+	if jc.Proxy.URL != "" {
+		proxyConfig := &ProxyConfig{
+			DefaultTargetUsername: jc.Proxy.DefaultTargetUsername,
+			DefaultTargetPassword: jc.Proxy.DefaultTargetPassword,
+		}
+
+		for _, target := range jc.Proxy.Targets {
+			proxyConfig.Targets = append(proxyConfig.Targets, ProxyTargetConfig{
+				URL:      target.URL,
+				Username: target.Username,
+				Password: target.Password,
+			})
+		}
+
+		agent := NewAgent(jc.Proxy.URL, &AgentConfig{
+			Username:        jc.Proxy.Username,
+			Password:        jc.Proxy.Password,
+			ResponseTimeout: jc.Proxy.ResponseTimeout,
+			ProxyConfig:     proxyConfig,
+		})
+
+		responses, err := agent.Read(requests)
+		if err != nil {
+			return err
+		}
+
+		tags := map[string]string{"jolokia_proxy_url": jc.Proxy.URL}
 		gatherer.Gather(responses, tags)
 	}
 
@@ -141,12 +172,6 @@ func (jc *Jolokia) newMetric(config metricConfig) Metric {
 		metric.TagPrefix = *config.TagPrefix
 	}
 
-	if config.TagSeparator == nil {
-		metric.TagSeparator = jc.DefaultTagSeparator
-	} else {
-		metric.TagSeparator = *config.TagSeparator
-	}
-
 	return metric
 }
 
@@ -157,7 +182,6 @@ func init() {
 			DefaultFieldPrefix:    "",
 			DefaultFieldSeparator: ".",
 			DefaultTagPrefix:      "",
-			DefaultTagSeparator:   "_",
 		}
 	})
 }

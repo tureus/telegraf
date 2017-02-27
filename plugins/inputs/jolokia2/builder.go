@@ -8,16 +8,18 @@ import (
 const defaultFieldName = "value"
 
 type pointBuilder struct {
-	metric        Metric
-	request       ReadRequest
-	substitutions []string
+	metric           Metric
+	objectAttributes []string
+	objectPath       string
+	substitutions    []string
 }
 
-func newPointBuilder(metric Metric, request ReadRequest) *pointBuilder {
+func newPointBuilder(metric Metric, attributes []string, path string) *pointBuilder {
 	return &pointBuilder{
-		metric:        metric,
-		request:       request,
-		substitutions: makeSubstitutionList(metric.Mbean),
+		metric:           metric,
+		objectAttributes: attributes,
+		objectPath:       path,
+		substitutions:    makeSubstitutionList(metric.Mbean),
 	}
 }
 
@@ -35,6 +37,7 @@ func (pb *pointBuilder) Build(mbean string, value interface{}) []point {
 
 	points := make([]point, 0)
 	for mbean, value := range valueMap {
+
 		points = append(points, point{
 			Tags:   pb.extractTags(mbean),
 			Fields: pb.extractFields(mbean, value),
@@ -75,7 +78,7 @@ func (pb *pointBuilder) formatTagName(tagName string) string {
 	}
 
 	if tagPrefix := pb.metric.TagPrefix; tagPrefix != "" {
-		return tagPrefix + pb.metric.TagSeparator + tagName
+		return tagPrefix + tagName
 	}
 
 	return tagName
@@ -84,41 +87,37 @@ func (pb *pointBuilder) formatTagName(tagName string) string {
 // extractFields generates the map of fields for a given mbean name
 // and value object.
 func (pb *pointBuilder) extractFields(mbean string, value interface{}) map[string]interface{} {
-	attributes := pb.request.Attributes
-	path := pb.request.Path
-
 	fieldMap := make(map[string]interface{})
 	valueMap, ok := value.(map[string]interface{})
 
 	if ok {
 		// complex value
-		if len(attributes) == 0 {
+		if len(pb.objectAttributes) == 0 {
 			// if there were no attributes requested,
 			// then the keys are attributes
-			fieldName := pb.metric.FieldPrefix
-			pb.fillFields(fieldName, valueMap, fieldMap)
+			pb.fillFields("", valueMap, fieldMap)
 
-		} else if len(attributes) == 1 {
+		} else if len(pb.objectAttributes) == 1 {
 			// if there was a single attribute requested,
 			// then the keys are the attribute's properties
-			fieldName := pb.formatFieldName(attributes[0], path)
+			fieldName := pb.formatFieldName(pb.objectAttributes[0], pb.objectPath)
 			pb.fillFields(fieldName, valueMap, fieldMap)
 
 		} else {
 			// if there were multiple attributes requested,
 			// then the keys are the attribute names
-			for _, attribute := range attributes {
-				fieldName := pb.formatFieldName(attribute, path)
+			for _, attribute := range pb.objectAttributes {
+				fieldName := pb.formatFieldName(attribute, pb.objectPath)
 				pb.fillFields(fieldName, valueMap[attribute], fieldMap)
 			}
 		}
 	} else {
 		// scalar value
 		var fieldName string
-		if len(attributes) == 0 {
-			fieldName = pb.formatFieldName(defaultFieldName, path)
+		if len(pb.objectAttributes) == 0 {
+			fieldName = pb.formatFieldName(defaultFieldName, pb.objectPath)
 		} else {
-			fieldName = pb.formatFieldName(attributes[0], path)
+			fieldName = pb.formatFieldName(pb.objectAttributes[0], pb.objectPath)
 		}
 
 		pb.fillFields(fieldName, value, fieldMap)
@@ -140,7 +139,7 @@ func (pb *pointBuilder) formatFieldName(attribute, path string) string {
 	fieldSeparator := pb.metric.FieldSeparator
 
 	if fieldPrefix != "" {
-		fieldName = fieldPrefix + fieldSeparator + fieldName
+		fieldName = fieldPrefix + fieldName
 	}
 
 	if path != "" {
@@ -153,19 +152,15 @@ func (pb *pointBuilder) formatFieldName(attribute, path string) string {
 // fillFields recurses into the supplied value object, generating a named field
 // for every value it discovers.
 func (pb *pointBuilder) fillFields(name string, value interface{}, fieldMap map[string]interface{}) {
-	separator := pb.metric.FieldSeparator
-
 	if valueMap, ok := value.(map[string]interface{}); ok {
-		separator := pb.metric.FieldSeparator
-
 		// keep going until we get to something that is not a map
 		for key, innerValue := range valueMap {
 			var innerName string
 
 			if name == "" {
-				innerName = key
+				innerName = pb.metric.FieldPrefix + key
 			} else {
-				innerName = name + separator + key
+				innerName = name + pb.metric.FieldSeparator + key
 			}
 
 			pb.fillFields(innerName, innerValue, fieldMap)
@@ -177,7 +172,7 @@ func (pb *pointBuilder) fillFields(name string, value interface{}, fieldMap map[
 	if pb.metric.FieldName != "" {
 		name = pb.metric.FieldName
 		if prefix := pb.metric.FieldPrefix; prefix != "" {
-			name = prefix + separator + name
+			name = prefix + name
 		}
 	}
 

@@ -15,7 +15,6 @@ type Metric struct {
 	FieldPrefix    string
 	FieldSeparator string
 	TagPrefix      string
-	TagSeparator   string
 }
 
 type Gatherer struct {
@@ -74,13 +73,18 @@ func (g *Gatherer) gatherPoints(metric Metric, responses []ReadResponse) []point
 			continue
 		}
 
-		request := response.Request
-		if !metricMatchesRequest(metric, request) {
+		if !metricMatchesResponse(metric, response) {
 			continue
 		}
 
-		pb := newPointBuilder(metric, response.Request)
+		pb := newPointBuilder(metric, response.RequestAttributes, response.RequestPath)
 		for _, point := range pb.Build(metric.Mbean, response.Value) {
+
+			// FIXME: this seems out of nowhere
+			if response.RequestTarget != "" {
+				point.Tags["jolokia_target_url"] = response.RequestTarget
+			}
+
 			points = append(points, point)
 		}
 	}
@@ -101,16 +105,17 @@ func gatherTags(metricTags, outerTags map[string]string) map[string]string {
 	return tags
 }
 
-// metricMatchesRequest returns true when the name, attributes, and path
-// of a Metric match the corresponding elements in a ReadRequest object
+// metricMatchesResponse returns true when the name, attributes, and path
+// of a Metric match the corresponding elements in a ReadResponse object
 // returned by a Jolokia agent.
-func metricMatchesRequest(metric Metric, request ReadRequest) bool {
-	if metric.Mbean != request.Mbean {
+func metricMatchesResponse(metric Metric, response ReadResponse) bool {
+
+	if metric.Mbean != response.RequestMbean {
 		return false
 	}
 
 	if len(metric.Paths) == 0 {
-		return len(request.Attributes) == 0
+		return len(response.RequestAttributes) == 0
 	}
 
 	for _, fullPath := range metric.Paths {
@@ -122,8 +127,8 @@ func metricMatchesRequest(metric Metric, request ReadRequest) bool {
 			path = segments[1]
 		}
 
-		for _, rattr := range request.Attributes {
-			if attribute == rattr && path == request.Path {
+		for _, rattr := range response.RequestAttributes {
+			if attribute == rattr && path == response.RequestPath {
 				return true
 			}
 		}

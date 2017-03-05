@@ -11,9 +11,9 @@ type Jolokia struct {
 	Agents                agentsConfig
 	Proxy                 proxyConfig
 	Metrics               []metricConfig `toml:"metric"`
-	DefaultFieldPrefix    string         `toml:"default_field_prefix"`
-	DefaultFieldSeparator string         `toml:"default_field_separator"`
-	DefaultTagPrefix      string         `toml:"default_tag_prefix"`
+	DefaultFieldPrefix    string
+	DefaultFieldSeparator string
+	DefaultTagPrefix      string
 }
 
 type remoteConfig struct {
@@ -23,7 +23,7 @@ type remoteConfig struct {
 	SSLCA              string `toml:"ssl_ca"`
 	SSLCert            string `toml:"ssl_cert"`
 	SSLKey             string `toml:"ssl_key"`
-	InsecureSkipVerify bool   `toml:"insecure_skip_verify"`
+	InsecureSkipVerify bool
 }
 
 type agentsConfig struct {
@@ -34,8 +34,8 @@ type agentsConfig struct {
 type proxyConfig struct {
 	remoteConfig
 	URL                   string `toml:"url"`
-	DefaultTargetPassword string `toml:"default_target_username"`
-	DefaultTargetUsername string `toml:"default_target_password"`
+	DefaultTargetPassword string
+	DefaultTargetUsername string
 
 	Targets []proxyTargetConfig `toml:"target"`
 }
@@ -50,30 +50,33 @@ type metricConfig struct {
 	Name           string
 	Mbean          string
 	Paths          []string
-	FieldName      *string  `toml:"field_name"`
-	FieldPrefix    *string  `toml:"field_prefix"`
-	FieldSeparator *string  `toml:"field_separator"`
-	TagPrefix      *string  `toml:"tag_prefix"`
-	TagKeys        []string `toml:"tag_keys"`
+	FieldName      *string
+	FieldPrefix    *string
+	FieldSeparator *string
+	TagPrefix      *string
+	TagKeys        []string
 }
 
 func (jc *Jolokia) SampleConfig() string {
 	return `
   # default_tag_prefix      = ""
-  # default_tag_separator   = "_"
+  # default_field_prefix    = ""
   # default_field_separator = "."
 
-  # Add agents to query
-  [inputs.jolokia2.agents]
-    urls     = ["http://127.0.0.1:8080/jolokia"]
-    #username = ""
-    #password = ""
-    #ssl_ca   = "/var/private/ca.pem"
-    #ssl_cert = "/var/private/client.pem"
-    #ssl_key  = "/var/private/client-key.pem"
+  ## Add agents to query
+    [inputs.jolokia2.agents]
+      urls     = ["http://127.0.0.1:8080/jolokia"]
+  #   username = ""
+  #   password = ""
+
+  #   ## Optional SSL Config
+  #   ssl_ca   = "/var/private/ca.pem"
+  #   ssl_cert = "/var/private/client.pem"
+  #   ssl_key  = "/var/private/client-key.pem"
+  #   insecure_skip_verify = false
 
   [[inputs.jolokia2.metric]]
-    name  = "jvm_runtime"
+    name  = "java_runtime"
     mbean = "java.lang:type=Runtime"
     paths = ["Uptime"]
 `
@@ -94,11 +97,19 @@ func (jc *Jolokia) Gather(acc telegraf.Accumulator) error {
 	requests := RequestPayload(metrics)
 
 	for _, url := range jc.Agents.URLs {
-		agent := NewAgent(url, &AgentConfig{
-			Username:        jc.Agents.Username,
-			Password:        jc.Agents.Password,
-			ResponseTimeout: jc.Agents.ResponseTimeout,
+		agent, err := NewAgent(url, &AgentConfig{
+			Username:           jc.Agents.Username,
+			Password:           jc.Agents.Password,
+			ResponseTimeout:    jc.Agents.ResponseTimeout,
+			SSLCA:              jc.Agents.SSLCA,
+			SSLCert:            jc.Agents.SSLCert,
+			SSLKey:             jc.Agents.SSLKey,
+			InsecureSkipVerify: jc.Agents.InsecureSkipVerify,
 		})
+
+		if err != nil {
+			return err
+		}
 
 		responses, err := agent.Read(requests)
 		if err != nil {
@@ -123,12 +134,20 @@ func (jc *Jolokia) Gather(acc telegraf.Accumulator) error {
 			})
 		}
 
-		agent := NewAgent(jc.Proxy.URL, &AgentConfig{
-			Username:        jc.Proxy.Username,
-			Password:        jc.Proxy.Password,
-			ResponseTimeout: jc.Proxy.ResponseTimeout,
-			ProxyConfig:     proxyConfig,
+		agent, err := NewAgent(jc.Proxy.URL, &AgentConfig{
+			Username:           jc.Proxy.Username,
+			Password:           jc.Proxy.Password,
+			ResponseTimeout:    jc.Proxy.ResponseTimeout,
+			SSLCA:              jc.Proxy.SSLCA,
+			SSLCert:            jc.Proxy.SSLCert,
+			SSLKey:             jc.Proxy.SSLKey,
+			InsecureSkipVerify: jc.Proxy.InsecureSkipVerify,
+			ProxyConfig:        proxyConfig,
 		})
+
+		if err != nil {
+			return err
+		}
 
 		responses, err := agent.Read(requests)
 		if err != nil {

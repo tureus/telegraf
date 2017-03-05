@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"path"
 	"time"
+
+	"github.com/influxdata/telegraf/internal"
 )
 
 type Agent struct {
@@ -18,9 +20,13 @@ type Agent struct {
 }
 
 type AgentConfig struct {
-	ResponseTimeout time.Duration
-	Username        string
-	Password        string
+	ResponseTimeout    time.Duration
+	Username           string
+	Password           string
+	SSLCA              string
+	SSLCert            string
+	SSLKey             string
+	InsecureSkipVerify bool
 
 	ProxyConfig *ProxyConfig
 }
@@ -93,16 +99,28 @@ type jolokiaResponse struct {
 	Status  int            `json:"status"`
 }
 
-func NewAgent(url string, config *AgentConfig) *Agent {
+func NewAgent(url string, config *AgentConfig) (*Agent, error) {
+	tlsConfig, err := internal.GetTLSConfig(
+		config.SSLCert, config.SSLKey, config.SSLCA, config.InsecureSkipVerify)
+	if err != nil {
+		return nil, err
+	}
+
+	transport := &http.Transport{
+		ResponseHeaderTimeout: config.ResponseTimeout,
+		TLSClientConfig:       tlsConfig,
+	}
+
 	client := &http.Client{
-		Timeout: config.ResponseTimeout,
+		Transport: transport,
+		Timeout:   config.ResponseTimeout,
 	}
 
 	return &Agent{
 		URL:    url,
 		config: config,
 		client: client,
-	}
+	}, nil
 }
 
 func (a *Agent) Read(requests []ReadRequest) ([]ReadResponse, error) {

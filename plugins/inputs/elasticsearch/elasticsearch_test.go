@@ -16,7 +16,8 @@ import (
 func defaultTags() map[string]string {
 	return map[string]string{
 		"cluster_name":          "es-testcluster",
-		"node_attribute_master": "true",
+		"node_role_master":      "true",
+		"node_role_ingest":      "true",
 		"node_id":               "SDFsfSDFsdfFSDSDfSFDSDF",
 		"node_name":             "test.host.com",
 		"node_host":             "test",
@@ -75,6 +76,7 @@ func TestGather(t *testing.T) {
 	es.client.Transport = newTransportMock(http.StatusOK, nodeStatsResponse)
 
 	var acc testutil.Accumulator
+	acc.SetDebug(true)
 	if err := acc.GatherError(es.Gather); err != nil {
 		t.Fatal(err)
 	}

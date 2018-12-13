@@ -27,6 +27,7 @@ const statsPathLocal = "/_nodes/_local/stats"
 type nodeStat struct {
 	Host       string            `json:"host"`
 	Name       string            `json:"name"`
+	Roles      []string          `json:"roles"`
 	Attributes map[string]string `json:"attributes"`
 	Indices    interface{}       `json:"indices"`
 	OS         interface{}       `json:"os"`
@@ -283,14 +284,27 @@ func (e *Elasticsearch) gatherNodeStats(url string, acc telegraf.Accumulator) er
 			"cluster_name": nodeStats.ClusterName,
 		}
 
+		for _,s := range n.Roles {
+			if s == "master" {
+				tags["node_role_master"] = "true"
+			} else if s == "ingest" {
+				tags["node_role_ingest"] = "true"
+			} else if s == "data" {
+				tags["node_role_data"] = "true"
+			}
+		}
+
+		// panic(fmt.Sprintf("wow-ee: %+v", tags))
+
 		if e.ClusterStats {
 			// check for master
 			e.isMaster = (id == e.catMasterResponseTokens[0])
 		}
 
-		for k, v := range n.Attributes {
-			tags["node_attribute_"+k] = v
-		}
+		// We don't want attributes anymore, it has stuff like ml.enabled.
+		// for k, v := range n.Attributes {
+		// 	tags["node_attribute_"+k] = v
+		// }
 
 		stats := map[string]interface{}{
 			"indices":     n.Indices,
@@ -303,6 +317,7 @@ func (e *Elasticsearch) gatherNodeStats(url string, acc telegraf.Accumulator) er
 			"http":        n.HTTP,
 			"breakers":    n.Breakers,
 		}
+
 
 		now := time.Now()
 		for p, s := range stats {
